@@ -1,0 +1,42 @@
+{
+  "name": "lan-share",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LAN Share — troca de texto e ficheiros na rede local, 100% offline, via browser.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node server/index.ts",
+    "dev": "node --watch server/index.ts",
+    "dev:client": "vite --config client/vite.config.ts",
+    "build": "vite build --config client/vite.config.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json",
+    "test": "node --test \"server/test/**/*.test.ts\"",
+    "stress": "node scripts/stress.mjs",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/multipart": "^10.1.2",
+    "@fastify/rate-limit": "^11.2.0",
+    "@fastify/static": "^10.1.4",
+    "@fastify/websocket": "^11.3.1",
+    "fastify": "^5.12.5",
+    "qrcode-terminal": "^0.12.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "pngjs": "^7.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.0"
+  }
+}

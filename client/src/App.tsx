@@ -1,0 +1,144 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { Message, WsFrame } from './types.ts'
+import { authStatus, logout } from './api.ts'
+import { WsClient, type WsStatus } from './ws.ts'
+import Login from './components/Login.tsx'
+import Feed from './components/Feed.tsx'
+
+type AuthState = 'loading' | 'unauthed' | 'authed'
+
+/** Junta mensagens por id mantendo ordem cronológica. */
+function mergeMessages(a: Message[], b: Message[]): Message[] {
+  const byId = new Map<string, Message>()
+  for (const m of [...a, ...b]) byId.set(m.id, m)
+  return [...byId.values()].sort((x, y) => x.ts - y.ts)
+}
+
+export default function App() {
+  const [auth, setAuth] = useState<AuthState>('loading')
+  const [wsStatus, setWsStatus] = useState<WsStatus>('connecting')
+  const [messages, setMessages] = useState<Message[]>([])
+  const wsRef = useRef<WsClient | null>(null)
+
+  const handleFrame = useCallback((frame: WsFrame) => {
+    if (frame.t === 'history') {
+      setMessages(frame.messages)
+      return
+    }
+    if (frame.t === 'message') {
+      setMessages((prev) => mergeMessages(prev, [frame.message]))
+      return
+    }
+    if (frame.t === 'file-expired') {
+      setMessages((prev) => prev.filter((m) => !(m.kind === 'file' && m.file.fileId === frame.fileId)))
+    }
+  }, [])
+
+  const addMessage = useCallback((message: Message) => {
+    setMessages((prev) => mergeMessages(prev, [message]))
+  }, [])
+
+  const onAuthFail = useCallback(() => {
+    wsRef.current?.stop()
+    setAuth('unauthed')
+    setMessages([])
+  }, [])
+
+  const onLogout = useCallback(async () => {
+    try {
+      await logout()
+    } catch {
+      /* sessão provavelmente já expirada */
+    }
+    onAuthFail()
+  }, [onAuthFail])
+
+  // Cria o cliente WS (uma vez) e liga os callbacks.
+  useEffect(() => {
+    const client = new WsClient()
+    wsRef.current = client
+    client.onStatus = setWsStatus
+    client.onFrame = handleFrame
+    return () => client.stop()
+  }, [handleFrame])
+
+  // Estado inicial: há sessão válida?
+  useEffect(() => {
+    let cancelled = false
+    authStatus()
+      .then(({ authenticated }) => {
+        if (cancelled) return
+        setAuth(authenticated ? 'authed' : 'unauthed')
+      })
+      .catch(() => {
+        if (!cancelled) setAuth('unauthed')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Estar autenticado: histórico + ligar o WS.
+  useEffect(() => {
+    if (auth !== 'authed') return
+    let cancelled = false
+    fetch('/api/history')
+      .then((res) => (res.ok ? (res.json() as Promise<{ messages: Message[] }>) : Promise.resolve(null)))
+      .then((data) => {
+        if (cancelled || !data) return
+        setMessages((prev) => mergeMessages(prev, data.messages))
+      })
+      .catch(() => {})
+    wsRef.current?.start()
+    return () => {
+      cancelled = true
+    }
+  }, [auth])
+
+  // A reconectar há demasiado tempo? Confirma se a sessão ainda existe.
+  useEffect(() => {
+    if (wsStatus !== 'reconnecting') return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      authStatus()
+        .then(({ authenticated }) => {
+          if (!cancelled && !authenticated) onAuthFail()
+        })
+        .catch(() => {})
+    }, 3000)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [wsStatus, onAuthFail])
+
+  if (auth === 'loading') {
+    return (
+      <div className="loading-screen">
+        <div className="spinner" aria-hidden="true" />
+        <p>A carregar…</p>
+      </div>
+    )
+  }
+
+  if (auth === 'unauthed') {
+    return (
+      <Login
+        onAuthed={() => {
+          setMessages([])
+          setAuth('authed')
+        }}
+      />
+    )
+  }
+
+  return (
+    <Feed
+      messages={messages}
+      wsStatus={wsStatus}
+      addMessage={addMessage}
+      onAuthFail={onAuthFail}
+      onLogout={onLogout}
+    />
+  )
+}

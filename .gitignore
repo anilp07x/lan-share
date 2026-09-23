@@ -1,0 +1,6 @@
+# Lan Share
+node_modules/
+client/dist/
+data/
+*.log
+.env
