@@ -1,96 +1,50 @@
-import { useState } from 'react'
-import type { FileMessage, Message } from '../types.ts'
-import { fileUrl } from '../api.ts'
-import { copyText, formatBytes, formatTime, isPreviewable } from '../lib/format.ts'
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z" />
-    </svg>
-  )
-}
-
-function DownloadIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M5 20h14v-2H5v2zm7-18H5v2h14V2h-7zm-5 8h4v6h2v-6h4l-5-5-5 5z" />
-    </svg>
-  )
-}
-
-function FileIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z" />
-    </svg>
-  )
-}
-
-function isFile(m: Message): m is FileMessage {
-  return m.kind === 'file'
-}
+import { Check, Copy } from 'lucide-react'
+import type { Message } from '../types.ts'
+import { formatTime } from '../lib/format.ts'
+import { cn } from '../lib/utils.ts'
+import { useCopied } from '../hooks/useCopied.ts'
+import { Button } from './ui/button.tsx'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx'
+import Attachment from './Attachment.tsx'
 
 export default function MessageItem({ message }: { message: Message }) {
-  const [copied, setCopied] = useState(false)
-
-  async function onCopy() {
-    if (message.kind !== 'text') return
-    const ok = await copyText(message.body)
-    if (ok) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    }
-  }
+  const { copied, copy } = useCopied()
 
   if (message.kind === 'text') {
     return (
-      <div className="msg msg-text">
-        <div className="bubble">
-          <div className="bubble-body">{message.body}</div>
-          <div className="bubble-meta">
-            <span className="bubble-time">{formatTime(message.ts)}</span>
-            <button type="button" className="icon-btn" onClick={onCopy} title="Copiar texto">
-              <CopyIcon />
-              <span className="icon-btn-label">{copied ? 'Copiado' : 'Copiar'}</span>
-            </button>
-          </div>
+      <div className="group flex max-w-[min(78%,480px)] flex-col gap-1">
+        <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md border px-3.5 py-2.5 shadow-sm">
+          <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{message.body}</p>
+        </div>
+        <div className="flex items-center gap-1 pr-1">
+          <time className="text-muted-foreground text-[11px]">{formatTime(message.ts)}</time>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-1 h-6 gap-1 px-1.5 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => void copy(message.body)}
+                disabled={copied}
+              >
+                {copied ? <Check className="size-3 text-success" /> : <Copy className="size-3" />}
+                <span>{copied ? 'Copiado' : 'Copiar'}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Copiar texto</TooltipContent>
+          </Tooltip>
         </div>
       </div>
     )
   }
 
-  const file = message.file
-  const preview = isPreviewable(file)
-  const url = fileUrl(file.fileId)
-  const previewUrl = fileUrl(file.fileId, true)
-
   return (
-    <div className="msg msg-file">
-      <div className="file-card">
-        {preview ? (
-          <a className="file-thumb" href={previewUrl} target="_blank" rel="noopener noreferrer">
-            <img src={previewUrl} alt={file.name} loading="lazy" />
-          </a>
-        ) : null}
-        <div className="file-info">
-          <FileIcon />
-          <div className="file-meta">
-            <span className="file-name" title={file.name}>
-              {file.name}
-            </span>
-            <span className="file-detail">
-              {formatBytes(file.size)}
-              {preview ? '' : ` · ${file.mime}`}
-            </span>
-          </div>
-        </div>
-        <div className="file-actions">
-          <span className="bubble-time">{formatTime(message.ts)}</span>
-          <a className="btn btn-primary btn-small" href={url}>
-            <DownloadIcon /> Descarregar
-          </a>
-        </div>
+    <div className={cn('group flex flex-col gap-1')}>
+      <div className="max-w-[min(94%,540px)]">
+        <Attachment file={message.file} />
+      </div>
+      <div className="flex items-center gap-1 pr-1">
+        <time className="text-muted-foreground text-[11px]">{formatTime(message.ts)}</time>
       </div>
     </div>
   )

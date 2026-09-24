@@ -1,12 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import gsap from 'gsap'
+import { toast } from 'sonner'
+import { Share2, Upload } from 'lucide-react'
 import type { Message } from '../types.ts'
 import type { WsStatus } from '../ws.ts'
 import { isAuthError, errorMessage, postMessage, uploadFile } from '../api.ts'
 import { dayKey, formatDay } from '../lib/format.ts'
+import { prefersReducedMotion } from '../lib/motion.ts'
+import { Badge } from './ui/badge.tsx'
 import StatusBar from './StatusBar.tsx'
 import MessageItem from './MessageItem.tsx'
 import Composer from './Composer.tsx'
 import UploadCard, { type UploadTask } from './UploadCard.tsx'
+import Reveal from './Reveal.tsx'
 
 interface FeedProps {
   messages: Message[]
@@ -24,11 +30,12 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
   const atBottomRef = useRef(true)
   const abortRef = useRef<AbortController | null>(null)
   const mountedRef = useRef(true)
+  const emptyRef = useRef<HTMLDivElement>(null)
+  const dropBoxRef = useRef<HTMLDivElement>(null)
 
   const [tasks, setTasks] = useState<UploadTask[]>([])
   const [activeKey, setActiveKey] = useState<number | null>(null)
   const [dragDepth, setDragDepth] = useState(0)
-  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     mountedRef.current = true
@@ -44,12 +51,15 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
     if (el && atBottomRef.current) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  function pushToast(text: string) {
-    setToast(text)
-    setTimeout(() => {
-      if (mountedRef.current) setToast(null)
-    }, 4000)
-  }
+  // ── ícone do estado vazio: flutuação suave ───────────────────────────
+  useLayoutEffect(() => {
+    const el = emptyRef.current
+    if (!el || prefersReducedMotion() || messages.length > 0) return
+    const anim = gsap.to(el, { y: -6, duration: 1.8, yoyo: true, repeat: -1, ease: 'sine.inOut' })
+    return () => {
+      anim.kill()
+    }
+  }, [messages.length])
 
   const sendText = useCallback(
     async (body: string): Promise<boolean> => {
@@ -60,9 +70,9 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
       } catch (err) {
         if (isAuthError(err)) {
           onAuthFail()
-          return false
+        } else {
+          toast.error(errorMessage(err))
         }
-        pushToast(errorMessage(err))
         return false
       }
     },
@@ -94,7 +104,7 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
         setTasks((ts) => ts.map((t) => (t.key === next.key ? { ...t, status: 'done' as const } : t)))
         setTimeout(() => {
           if (mountedRef.current) setTasks((ts) => ts.filter((t) => t.key !== next.key))
-        }, 2500)
+        }, 2200)
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === ABORT) {
@@ -106,7 +116,7 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
           return
         }
         const msg = errorMessage(err)
-        pushToast(msg)
+        toast.error(msg)
         setTasks((ts) => ts.map((t) => (t.key === next.key ? { ...t, status: 'error' as const, error: msg } : t)))
       })
       .finally(() => {
@@ -126,18 +136,18 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
 
   // ── drag & drop ──────────────────────────────────────────────────────
   useEffect(() => {
-    function enter(e: DragEvent) {
+    const enter = (e: DragEvent) => {
       e.preventDefault()
       setDragDepth((d) => d + 1)
     }
-    function over(e: DragEvent) {
+    const over = (e: DragEvent) => {
       e.preventDefault()
     }
-    function leave(e: DragEvent) {
+    const leave = (e: DragEvent) => {
       e.preventDefault()
       setDragDepth((d) => Math.max(0, d - 1))
     }
-    function drop(e: DragEvent) {
+    const drop = (e: DragEvent) => {
       e.preventDefault()
       setDragDepth(0)
       if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
@@ -156,46 +166,57 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
     }
   }, [enqueueFiles])
 
+  // ── separadores de dia ───────────────────────────────────────────────
   const lastDayKey = useRef<string | null>(null)
-
-  const rows: React.ReactNode[] = []
+  const rows: ReactNode[] = []
+  let index = 0
   for (const message of messages) {
     const dk = dayKey(message.ts)
     if (dk !== lastDayKey.current) {
       lastDayKey.current = dk
       rows.push(
-        <div className="day-sep" key={`day-${dk}`}>
-          {formatDay(message.ts)}
-        </div>,
+        <Reveal className="flex justify-center py-2" key={`day-${dk}`} delay={0.05}>
+          <Badge variant="outline" className="bg-card/60 text-muted-foreground px-2.5 py-0.5">
+            {formatDay(message.ts)}
+          </Badge>
+        </Reveal>,
       )
     }
-    rows.push(<MessageItem key={message.id} message={message} />)
+    rows.push(
+      <Reveal key={message.id} delay={Math.min(index * 0.015, 0.3)}>
+        <MessageItem message={message} />
+      </Reveal>,
+    )
+    index++
   }
 
   return (
-    <div className="feed">
+    <div className="mx-auto flex h-dvh max-w-2xl flex-col">
       <StatusBar wsStatus={wsStatus} onLogout={onLogout} />
 
       <div
         ref={listRef}
-        className="messages"
+        className="feed-scroll flex flex-1 flex-col gap-1 px-3 pt-3 pb-2 sm:px-5"
         onScroll={() => {
           const el = listRef.current
           if (el) atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
         }}
       >
         {messages.length === 0 ? (
-          <div className="empty">
-            <p>Ainda não há mensagens.</p>
-            <p className="empty-sub">Abre este mesmo URL noutro telemóvel para partilhar.</p>
+          <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 text-center">
+            <div ref={emptyRef} className="bg-primary/10 text-primary flex size-16 items-center justify-center rounded-2xl">
+              <Share2 className="size-7" aria-hidden="true" />
+            </div>
+            <p className="text-sm font-medium">Ainda não há mensagens.</p>
+            <p className="text-xs">Abre este mesmo URL noutro telemóvel para partilhar.</p>
           </div>
         ) : (
-          rows
+          <>{rows}</>
         )}
       </div>
 
       {tasks.length > 0 ? (
-        <div className="uploads">
+        <div className="feed-scroll flex max-h-[38dvh] flex-col gap-2 px-3 pb-2 sm:px-5">
           {tasks.map((task) => (
             <UploadCard key={task.key} task={task} active={activeKey === task.key} onCancel={cancelTask} onRetry={retryTask} />
           ))}
@@ -205,14 +226,14 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
       <Composer onSendText={sendText} onFiles={enqueueFiles} />
 
       {dragDepth > 0 ? (
-        <div className="drop-overlay">
-          <div className="drop-box">Larga aqui os ficheiros para enviar</div>
-        </div>
-      ) : null}
-
-      {toast ? (
-        <div className="toast" role="alert">
-          {toast}
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm">
+          <div
+            ref={dropBoxRef}
+            className="border-ring bg-card flex items-center gap-3 rounded-2xl border-2 border-dashed px-8 py-6 text-base font-medium text-white"
+          >
+            <Upload className="size-5" aria-hidden="true" />
+            Larga aqui os ficheiros para enviar
+          </div>
         </div>
       ) : null}
     </div>

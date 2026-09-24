@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Loader2, Share2 } from 'lucide-react'
 import type { Message, WsFrame } from './types.ts'
 import { authStatus, logout } from './api.ts'
 import { WsClient, type WsStatus } from './ws.ts'
 import Login from './components/Login.tsx'
 import Feed from './components/Feed.tsx'
+import { Toaster } from './components/ui/sonner.tsx'
 
 type AuthState = 'loading' | 'unauthed' | 'authed'
 
@@ -114,9 +116,14 @@ export default function App() {
 
   if (auth === 'loading') {
     return (
-      <div className="loading-screen">
-        <div className="spinner" aria-hidden="true" />
-        <p>A carregar…</p>
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[radial-gradient(ellipse_at_top,rgba(79,140,255,0.08),transparent_60%)]">
+        <div className="bg-primary/15 text-primary flex size-12 animate-pulse items-center justify-center rounded-2xl">
+          <Share2 className="size-6" aria-hidden="true" />
+        </div>
+        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          A carregar…
+        </p>
       </div>
     )
   }
@@ -133,12 +140,15 @@ export default function App() {
   }
 
   return (
-    <Feed
-      messages={messages}
-      wsStatus={wsStatus}
-      addMessage={addMessage}
-      onAuthFail={onAuthFail}
-      onLogout={onLogout}
-    />
+    <>
+      <Feed
+        messages={messages}
+        wsStatus={wsStatus}
+        addMessage={addMessage}
+        onAuthFail={onAuthFail}
+        onLogout={onLogout}
+      />
+      <Toaster />
+    </>
   )
 }
