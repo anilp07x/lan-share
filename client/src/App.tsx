@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Loader2, Share2 } from 'lucide-react'
 import type { Message, WsFrame } from './types.ts'
 import { authStatus, logout } from './api.ts'
@@ -6,6 +6,7 @@ import { WsClient, type WsStatus } from './ws.ts'
 import Login from './components/Login.tsx'
 import Feed from './components/Feed.tsx'
 import { Toaster } from './components/ui/sonner.tsx'
+import { TooltipProvider } from './components/ui/tooltip.tsx'
 
 type AuthState = 'loading' | 'unauthed' | 'authed'
 
@@ -114,8 +115,9 @@ export default function App() {
     }
   }, [wsStatus, onAuthFail])
 
+  let screen: React.ReactNode
   if (auth === 'loading') {
-    return (
+    screen = (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[radial-gradient(ellipse_at_top,rgba(79,140,255,0.08),transparent_60%)]">
         <div className="bg-primary/15 text-primary flex size-12 animate-pulse items-center justify-center rounded-2xl">
           <Share2 className="size-6" aria-hidden="true" />
@@ -126,10 +128,8 @@ export default function App() {
         </p>
       </div>
     )
-  }
-
-  if (auth === 'unauthed') {
-    return (
+  } else if (auth === 'unauthed') {
+    screen = (
       <Login
         onAuthed={() => {
           setMessages([])
@@ -137,18 +137,20 @@ export default function App() {
         }}
       />
     )
+  } else {
+    screen = (
+      <>
+        <Feed
+          messages={messages}
+          wsStatus={wsStatus}
+          addMessage={addMessage}
+          onAuthFail={onAuthFail}
+          onLogout={onLogout}
+        />
+        <Toaster />
+      </>
+    )
   }
 
-  return (
-    <>
-      <Feed
-        messages={messages}
-        wsStatus={wsStatus}
-        addMessage={addMessage}
-        onAuthFail={onAuthFail}
-        onLogout={onLogout}
-      />
-      <Toaster />
-    </>
-  )
+  return <TooltipProvider>{screen}</TooltipProvider>
 }
