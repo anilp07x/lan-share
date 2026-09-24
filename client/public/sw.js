@@ -1,7 +1,7 @@
 /* LAN Share — service worker.
    Estratégia: navegações network-first (cai no cache se sem rede);
    assets simples stale-while-revalidate. Nunca interfere com /api nem /ws. */
-const CACHE = 'lan-share-v1'
+const CACHE = 'lan-share-v2'
 const CORE = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png']
 
 self.addEventListener('install', (event) => {

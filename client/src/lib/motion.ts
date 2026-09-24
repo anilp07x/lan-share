@@ -5,6 +5,3 @@ export function prefersReducedMotion(): boolean {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
 }
-
-export const MOTION_MS = 280
-export const MOTION_EASE = 'power2.out'

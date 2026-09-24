@@ -1,45 +1,164 @@
-import * as React from 'react'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { XIcon } from 'lucide-react'
+import { createContext, useContext, useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import Icon from '@/components/Icon.tsx'
 import { cn } from '@/lib/utils'
+import { Slot } from '@/lib/slot.tsx'
+import { prefersReducedMotion } from '@/lib/motion.ts'
 
-const Dialog = DialogPrimitive.Root
-const DialogTrigger = DialogPrimitive.Trigger
-const DialogPortal = DialogPrimitive.Portal
-const DialogClose = DialogPrimitive.Close
+interface DialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  children: ReactNode
+}
 
-function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+interface DialogCtx {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  titleId: string
+  closable: boolean
+}
+
+const Ctx = createContext<DialogCtx | null>(null)
+
+function useCtx() {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('Dialog subcomponentes têm de estar dentro de <Dialog>')
+  return ctx
+}
+
+function Dialog({ open, onOpenChange, children, closable = true }: DialogProps & { closable?: boolean }) {
+  const titleId = useId()
+  const value = useMemo(
+    () => ({ open, onOpenChange, titleId, closable }),
+    [open, onOpenChange, titleId, closable],
+  )
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
+
+type ButtonWithChildProps = { children: ReactNode; asChild?: boolean } & React.ComponentProps<'button'>
+
+function DialogTrigger({ children, asChild = false, onClick, ...props }: ButtonWithChildProps) {
+  const ctx = useCtx()
+  const handler = () => ctx.onOpenChange(true)
+  if (asChild) {
+    return (
+      <Slot onClick={onClick ?? handler} {...props}>
+        {children}
+      </Slot>
+    )
+  }
   return (
-    <DialogPrimitive.Overlay
-      data-slot="dialog-overlay"
-      className={cn(
-        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200',
-        className,
-      )}
-      {...props}
-    />
+    <button type="button" onClick={handler} {...props}>
+      {children}
+    </button>
   )
 }
 
-function DialogContent({ className, children, ...props }: React.ComponentProps<typeof DialogPrimitive.Content>) {
+function DialogClose({ children, asChild = false, onClick, ...props }: ButtonWithChildProps) {
+  const ctx = useCtx()
+  const handler = () => ctx.onOpenChange(false)
+  if (asChild) {
+    return (
+      <Slot onClick={onClick ?? handler} {...props}>
+        {children}
+      </Slot>
+    )
+  }
   return (
-    <DialogPortal>
+    <button type="button" onClick={handler} {...props}>
+      {children}
+    </button>
+  )
+}
+
+function DialogPortal() {
+  return null
+}
+
+function useLock(open: boolean) {
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+}
+
+function DialogOverlay({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div data-slot="dialog-overlay" className={cn('absolute inset-0 bg-black/60 backdrop-blur-sm', className)} aria-hidden="true" {...props} />
+}
+
+function DialogContent({ className, children, ...props }: React.ComponentProps<'div'>) {
+  const ctx = useCtx()
+  const ref = useRef<HTMLDivElement>(null)
+  const reduced = prefersReducedMotion()
+  useLock(ctx.open)
+
+  useEffect(() => {
+    if (!ctx.open) return undefined
+    ref.current?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        return ctx.onOpenChange(false)
+      }
+      if (e.key === 'Tab' && ref.current) {
+        const focusables = Array.from(
+          ref.current.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+          ),
+        )
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (!first || !last) return
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [ctx.open, ctx.onOpenChange])
+
+  if (!ctx.open) return null
+
+  return createPortal(
+    <div data-slot="dialog-root" className="fixed inset-0 z-50 grid place-items-center p-4">
       <DialogOverlay />
-      <DialogPrimitive.Content
+      <div
+        ref={ref}
         data-slot="dialog-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={ctx.titleId}
+        tabIndex={-1}
         className={cn(
-          'bg-background data-[state=closed]:translate-y-6 data-[state=closed]:opacity-0 data-[state=open]:translate-y-0 data-[state=open]:opacity-100 fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border p-6 shadow-2xl transition-all duration-250 sm:w-full',
+          'bg-background text-foreground relative z-10 max-h-[86dvh] w-full max-w-lg overflow-y-auto rounded-xl border border-border p-6 focus:outline-none',
+          !reduced && 'animate-dialog-in',
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-          <XIcon className="size-4" />
-          <span className="sr-only">Fechar</span>
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
-    </DialogPortal>
+        {ctx.closable && (
+          <button
+            type="button"
+            onClick={() => ctx.onOpenChange(false)}
+            aria-label="Fechar"
+            className="text-muted-foreground absolute top-4 right-4 flex size-8 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <Icon name="x" className="size-4" />
+          </button>
+        )}
+      </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -48,15 +167,31 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
 }
 
 function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-footer" className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)} {...props} />
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      {...props}
+    />
+  )
 }
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title data-slot="dialog-title" className={cn('text-lg leading-none font-semibold', className)} {...props} />
+function DialogTitle({ className, ...props }: React.ComponentProps<'h2'>) {
+  const ctx = useCtx()
+  return (
+    <h2
+      id={ctx.titleId}
+      data-slot="dialog-title"
+      className={cn('text-lg leading-none font-semibold', className)}
+      {...props}
+    />
+  )
 }
 
-function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description data-slot="dialog-description" className={cn('text-muted-foreground text-sm', className)} {...props} />
+function DialogDescription({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div data-slot="dialog-description" className={cn('text-muted-foreground text-sm', className)} {...props} />
+  )
 }
 
 export {

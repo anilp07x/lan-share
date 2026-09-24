@@ -1,6 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import gsap from 'gsap'
-import { LockKeyhole } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon.tsx'
 import { authStatus, errorMessage, isAuthError, login } from '../api.ts'
 import { prefersReducedMotion } from '../lib/motion.ts'
 import { Button } from './ui/button.tsx'
@@ -15,26 +14,14 @@ export default function Login({ onAuthed }: LoginProps) {
   const [pin, setPin] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const cardRef = useRef<HTMLDivElement>(null)
   const errRef = useRef<HTMLParagraphElement>(null)
-
-  useLayoutEffect(() => {
-    const el = cardRef.current
-    if (!el || prefersReducedMotion()) return
-    const anim = gsap.fromTo(
-      el,
-      { opacity: 0, y: 18, scale: 0.98 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: 'power3.out' },
-    )
-    return () => {
-      anim.kill()
-    }
-  }, [])
 
   useEffect(() => {
     const el = errRef.current
-    if (!error || !el) return
-    gsap.fromTo(el, { x: -8 }, { x: 0, duration: 0.35, ease: 'elastic.out(1, 0.4)' })
+    if (!error || !el || prefersReducedMotion()) return
+    el.classList.remove('animate-shake')
+    void el.offsetWidth
+    el.classList.add('animate-shake')
   }, [error])
 
   async function authenticate(code: string) {
@@ -60,10 +47,10 @@ export default function Login({ onAuthed }: LoginProps) {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background p-6">
-      <Card ref={cardRef} className="w-full max-w-sm py-8">
+      <Card className={`w-full max-w-sm py-8${prefersReducedMotion() ? '' : ' animate-rise-in'}`}>
         <CardHeader className="items-center gap-3 text-center">
           <div className="bg-muted text-muted-foreground flex size-12 items-center justify-center rounded-xl">
-            <LockKeyhole className="size-6" aria-hidden="true" />
+            <Icon name="lock" className="size-6" />
           </div>
           <div className="space-y-1.5">
             <CardTitle className="text-2xl tracking-tight">LAN Share</CardTitle>

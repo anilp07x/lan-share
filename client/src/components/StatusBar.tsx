@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Check, Copy, CircleHelp, Link2, LogOut, Share2 } from 'lucide-react'
+import Icon from './Icon.tsx'
 import type { WsStatus } from '../ws.ts'
 import { useCopied } from '../hooks/useCopied.ts'
 import { cn } from '../lib/utils.ts'
 import { Button } from './ui/button.tsx'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog.tsx'
-import { Separator } from './ui/separator.tsx'
 
 interface StatusBarProps {
   wsStatus: WsStatus
@@ -22,10 +21,10 @@ function HelpContent() {
         <DialogDescription>Abre este endereço noutro telemóvel ou computador que esteja na mesma rede.</DialogDescription>
       </DialogHeader>
       <div className="flex items-center gap-2 rounded-lg border p-3">
-        <Link2 className="text-primary size-4 shrink-0" aria-hidden="true" />
+        <Icon name="link" className="text-primary size-4 shrink-0" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{url}</span>
         <Button variant="outline" size="sm" onClick={() => void copy(url)}>
-          {copied ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
+          {copied ? <Icon name="check" className="size-3.5 text-success" /> : <Icon name="copy" className="size-3.5" />}
           {copied ? 'Copiado' : 'Copiar'}
         </Button>
       </div>
@@ -34,7 +33,7 @@ function HelpContent() {
         <li>Introduz o PIN que aparece no terminal do computador.</li>
         <li>Pronto — podes trocar texto e ficheiros.</li>
       </ol>
-      <Separator />
+      <div aria-hidden="true" className="bg-border my-2 h-px w-full" />
       <p className="text-muted-foreground text-xs">
         Dica: para instalar como app no telemóvel, usa "Adicionar ao ecrã principal".
       </p>
@@ -50,7 +49,7 @@ export default function StatusBar({ wsStatus, onLogout }: StatusBarProps) {
 
   const brand = (
     <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-      <Share2 className="size-4" aria-hidden="true" />
+      <Icon name="share" className="size-4" />
     </div>
   )
 
@@ -67,10 +66,10 @@ export default function StatusBar({ wsStatus, onLogout }: StatusBarProps) {
           </div>
         </div>
         <Button variant="ghost" size="icon" className="size-9" aria-label="Como ligar outros dispositivos" onClick={() => setHelpOpen(true)}>
-          <CircleHelp className="size-4" />
+          <Icon name="help" className="size-4" />
         </Button>
         <Button variant="ghost" size="icon" className="size-9" aria-label="Sair" onClick={onLogout}>
-          <LogOut className="size-4" />
+          <Icon name="logout" className="size-4" />
         </Button>
       </header>
 
@@ -89,13 +88,13 @@ export default function StatusBar({ wsStatus, onLogout }: StatusBarProps) {
         </div>
         <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
           <Button variant="ghost" className="justify-start gap-2" onClick={() => setHelpOpen(true)}>
-            <CircleHelp className="size-4" />
+<Icon name="help" className="size-4" />
             Como ligar
           </Button>
         </nav>
         <div className="border-border border-t p-3">
           <Button variant="ghost" className="text-muted-foreground w-full justify-start gap-2" onClick={onLogout}>
-            <LogOut className="size-4" />
+<Icon name="logout" className="size-4" />
             Sair
           </Button>
         </div>

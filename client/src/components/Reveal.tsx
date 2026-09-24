@@ -1,6 +1,6 @@
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
-import gsap from 'gsap'
-import { MOTION_EASE, MOTION_MS, prefersReducedMotion } from '../lib/motion.ts'
+import type { ReactNode } from 'react'
+import { cn } from '../lib/utils.ts'
+import { prefersReducedMotion } from '../lib/motion.ts'
 
 interface RevealProps {
   children: ReactNode
@@ -9,25 +9,16 @@ interface RevealProps {
   className?: string
 }
 
-/** Entrada suave (fade + deslize) quando o elemento monta. */
+/** Entrada suave (fade + deslize) quando o elemento monta, via CSS. */
 export default function Reveal({ children, delay = 0, y = 10, className }: RevealProps) {
-  const ref = useRef<HTMLDivElement>(null)
-
-  useLayoutEffect(() => {
-    const el = ref.current
-    if (!el || prefersReducedMotion()) return
-    const anim = gsap.fromTo(
-      el,
-      { opacity: 0, y },
-      { opacity: 1, y: 0, duration: MOTION_MS / 1000, delay, ease: MOTION_EASE, clearProps: 'transform' },
-    )
-    return () => {
-      anim.kill()
-    }
-  }, [delay, y])
-
+  if (prefersReducedMotion()) {
+    return <div className={className}>{children}</div>
+  }
   return (
-    <div ref={ref} className={className}>
+    <div
+      className={cn('animate-reveal', className)}
+      style={{ animationDelay: `${delay}s`, ['--reveal-y' as string]: `${y}px` }}
+    >
       {children}
     </div>
   )
