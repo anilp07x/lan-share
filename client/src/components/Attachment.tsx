@@ -52,8 +52,8 @@ export default function Attachment({ file }: { file: FileMeta }) {
               <Icon name="expand" className="size-3" />
               Ver
             </Badge>
-          </button>
-        ) : null}
+          </button> 
+        ) : null} 
 
         <div className="flex items-center gap-3 p-3">
           <div className={cn('bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-xl')}>
