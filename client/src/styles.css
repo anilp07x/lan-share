@@ -88,6 +88,23 @@
   }
 }
 
+/* caret do InputOTP — define a animação usada pelo componente shadcn */
+@keyframes caret-blink {
+  0%,
+  70%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  50% {
+    opacity: 0;
+  }
+}
+
+@utility animate-caret-blink {
+  animation: caret-blink 1s ease-out infinite;
+}
+
 /* ── scrollbars discretas (mantêm o overscroll a tocar bem) ─────────── */
 .feed-scroll {
   scrollbar-width: thin;
@@ -107,20 +124,10 @@
   background: transparent;
 }
 
-/* servo hover suave do cartão de anexo */
+/* luz morta no hover do cartão de anexo (sem sombra pesada, minimal) */
 .attachment-card {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 .attachment-card:hover {
-  border-color: color-mix(in srgb, var(--ring) 45%, var(--border));
-  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
-  transform: translateY(-1px);
-}
-@media (prefers-reduced-motion: reduce) {
-  .attachment-card:hover {
-    transform: none;
-  }
+  border-color: color-mix(in srgb, var(--ring) 40%, var(--border));
 }

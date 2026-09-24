@@ -13,7 +13,7 @@ export default function MessageItem({ message }: { message: Message }) {
   if (message.kind === 'text') {
     return (
       <div className="group flex max-w-[min(78%,480px)] flex-col gap-1">
-        <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md border px-3.5 py-2.5 shadow-sm">
+        <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md border px-3.5 py-2.5">
           <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{message.body}</p>
         </div>
         <div className="flex items-center gap-1 pr-1">

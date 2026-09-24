@@ -118,7 +118,7 @@ export default function App() {
   let screen: React.ReactNode
   if (auth === 'loading') {
     screen = (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[radial-gradient(ellipse_at_top,rgba(79,140,255,0.08),transparent_60%)]">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background">
         <div className="bg-primary/15 text-primary flex size-12 animate-pulse items-center justify-center rounded-2xl">
           <Share2 className="size-6" aria-hidden="true" />
         </div>

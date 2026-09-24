@@ -191,39 +191,41 @@ export default function Feed({ messages, wsStatus, addMessage, onAuthFail, onLog
   }
 
   return (
-    <div className="mx-auto flex h-dvh max-w-2xl flex-col">
+    <div className="flex h-dvh flex-col md:flex-row">
       <StatusBar wsStatus={wsStatus} onLogout={onLogout} />
 
-      <div
-        ref={listRef}
-        className="feed-scroll flex flex-1 flex-col gap-1 px-3 pt-3 pb-2 sm:px-5"
-        onScroll={() => {
-          const el = listRef.current
-          if (el) atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
-        }}
-      >
-        {messages.length === 0 ? (
-          <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 text-center">
-            <div ref={emptyRef} className="bg-primary/10 text-primary flex size-16 items-center justify-center rounded-2xl">
-              <Share2 className="size-7" aria-hidden="true" />
+      <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
+        <div
+          ref={listRef}
+          className="feed-scroll flex flex-1 flex-col gap-1 px-3 pt-3 pb-2 sm:px-5"
+          onScroll={() => {
+            const el = listRef.current
+            if (el) atBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100
+          }}
+        >
+          {messages.length === 0 ? (
+            <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 text-center">
+              <div ref={emptyRef} className="bg-primary/10 text-primary flex size-16 items-center justify-center rounded-2xl">
+                <Share2 className="size-7" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-medium">Ainda não há mensagens.</p>
+              <p className="text-xs">Abre este mesmo URL noutro telemóvel para partilhar.</p>
             </div>
-            <p className="text-sm font-medium">Ainda não há mensagens.</p>
-            <p className="text-xs">Abre este mesmo URL noutro telemóvel para partilhar.</p>
-          </div>
-        ) : (
-          <>{rows}</>
-        )}
-      </div>
-
-      {tasks.length > 0 ? (
-        <div className="feed-scroll flex max-h-[38dvh] flex-col gap-2 px-3 pb-2 sm:px-5">
-          {tasks.map((task) => (
-            <UploadCard key={task.key} task={task} active={activeKey === task.key} onCancel={cancelTask} onRetry={retryTask} />
-          ))}
+          ) : (
+            <>{rows}</>
+          )}
         </div>
-      ) : null}
 
-      <Composer onSendText={sendText} onFiles={enqueueFiles} />
+        {tasks.length > 0 ? (
+          <div className="feed-scroll flex max-h-[38dvh] flex-col gap-2 px-3 pb-2 sm:px-5">
+            {tasks.map((task) => (
+              <UploadCard key={task.key} task={task} active={activeKey === task.key} onCancel={cancelTask} onRetry={retryTask} />
+            ))}
+          </div>
+        ) : null}
+
+        <Composer onSendText={sendText} onFiles={enqueueFiles} />
+      </main>
 
       {dragDepth > 0 ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm">
