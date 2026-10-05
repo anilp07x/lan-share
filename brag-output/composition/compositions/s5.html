@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LAN Share — cena 5</title>
+  </head>
+  <body>
+    <template>
+      <style>
+#s5 .amb {
+          position: absolute;
+          left: 50%;
+          top: 300px;
+          width: 1700px;
+          height: 1000px;
+          margin-left: -850px;
+          background: radial-gradient(
+            ellipse at 50% 42%,
+            rgba(41, 151, 255, 0.16),
+            rgba(41, 151, 255, 0) 66%
+          );
+        }
+        #s5 .seals {
+          position: absolute;
+          inset: 0;
+        }
+        #s5 .card {
+          position: absolute;
+          top: 250px;
+          width: 480px;
+          height: 340px;
+          padding: 46px 40px;
+          background: var(--card);
+          border: 1px solid var(--border-2);
+          border-radius: 32px;
+        }
+        #s5 .c1 {
+          left: 200px;
+        }
+        #s5 .c2 {
+          left: 720px;
+        }
+        #s5 .c3 {
+          left: 1240px;
+        }
+        #s5 .ico {
+          width: 84px;
+          height: 84px;
+          border-radius: 26px;
+          display: grid;
+          place-items: center;
+          background: rgba(41, 151, 255, 0.24);
+        }
+        #s5 .ico .icon {
+          width: 42px;
+          height: 42px;
+          color: var(--primary);
+        }
+        #s5 .c2 .ico {
+          background: rgba(48, 209, 88, 0.24);
+        }
+        #s5 .c2 .ico .icon {
+          color: var(--success);
+        }
+        #s5 .c3 .ico {
+          background: rgba(255, 159, 10, 0.24);
+        }
+        #s5 .c3 .ico .icon {
+          color: #ff9f0a;
+        }
+        #s5 h3 {
+          margin-top: 34px;
+          font-size: 46px;
+        }
+        #s5 .hint {
+          margin-top: 14px;
+          font-size: 26px;
+          color: var(--muted);
+          line-height: 1.35;
+        }
+        #s5 .lockup {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 336px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        #s5 .ring {
+          width: 168px;
+          height: 168px;
+          border-radius: 50%;
+          background: conic-gradient(from 200deg, #2997ff, #30d158 55%, #2997ff);
+          display: grid;
+          place-items: center;
+        }
+        #s5 .ring .inner {
+          width: 140px;
+          height: 140px;
+          border-radius: 50%;
+          background: #050506;
+          display: grid;
+          place-items: center;
+        }
+        #s5 .ring .icon {
+          width: 60px;
+          height: 60px;
+          color: var(--fg);
+        }
+        #s5 .ringglow {
+          position: absolute;
+          left: 50%;
+          top: -70px;
+          width: 900px;
+          height: 620px;
+          margin-left: -450px;
+          background: radial-gradient(
+            ellipse at 50% 50%,
+            rgba(41, 151, 255, 0.24),
+            rgba(41, 151, 255, 0) 68%
+          );
+          transform: scale(calc(1 + var(--bass) * 0.06));
+          opacity: calc(0.55 + var(--bass) * 0.45);
+          pointer-events: none;
+        }
+        #s5 .word {
+          margin-top: 44px;
+          font-size: 104px;
+          font-weight: 600;
+          letter-spacing: -0.04em;
+        }
+        #s5 .rule {
+          margin-top: 34px;
+          width: 520px;
+          height: 1px;
+          background: linear-gradient(90deg, rgba(245, 245, 247, 0), rgba(245, 245, 247, 0.4), rgba(245, 245, 247, 0));
+        }
+        #s5 .tag {
+          margin-top: 36px;
+          position: relative;
+        }
+        #s5 .tag span {
+          display: block;
+          font-size: 68px;
+          font-weight: 600;
+          letter-spacing: -0.03em;
+          opacity: calc(0.88 + var(--bass) * 0.12);
+        }
+      </style>
+
+      <div id="root" data-composition-id="s5" data-width="1920" data-height="1080">
+        <section id="s5" class="scene">
+          <div id="s5-amb" class="amb"></div>
+          <div id="s5-seals" class="seals" data-layout-allow-occlusion>
+            <div id="s5-c1" class="card c1">
+              <div class="ico">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+                </svg>
+              </div>
+              <h3>Instantâneo</h3>
+              <div class="hint">Mensagens e ficheiros sem espera.</div>
+            </div>
+
+            <div id="s5-c2" class="card c2">
+              <div class="ico">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m2 2 20 20" />
+                  <path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193" />
+                  <path d="M21.532 16.5A4.5 4.5 0 0 0 17.5 12h-1.79A7.008 7.008 0 0 0 10 5.07" />
+                </svg>
+              </div>
+              <h3>100% offline</h3>
+              <div class="hint">Nada sai da tua rede local.</div>
+            </div>
+
+            <div id="s5-c3" class="card c3">
+              <div class="ico">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <h3>Sem contas</h3>
+              <div class="hint">Um PIN de 6 dígitos e pronto.</div>
+            </div>
+          </div>
+
+          <div id="s5-lockup" class="lockup">
+            <div id="s5-glow" class="ringglow"></div>
+            <div id="s5-mark" class="ring">
+              <div class="inner">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+                </svg>
+              </div>
+            </div>
+            <div id="s5-word" class="word">LAN Share</div>
+            <div id="s5-rule" class="rule"></div>
+            <div id="s5-tag" class="tag">
+              <span class="grad">Partilha o que importa, dentro da tua rede.</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <script>
+/* Cena 5 · 17.91–23.5 s. Tempos locais = globais − 17.91.
+           Cues: strong 18.44 / 19.49 / 20.54 (um por selo) e
+           21.59 (assinatura, LOCK). Intervalos de 1.05 s = 2 tempos. */
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+
+          /* O outro começa em presença, não no vazio. */
+          tl.from('#s5-amb', { autoAlpha: 0, duration: 0.6, ease: 'power2.out' }, 0);
+
+          var cards = ['#s5-c1', '#s5-c2', '#s5-c3'];
+          var at = [0.53, 1.58, 2.63];
+          cards.forEach(function (sel, i) {
+            tl.from(sel, { autoAlpha: 0, y: 60, scale: 0.94, duration: 0.52, ease: 'power3.out' }, at[i]);
+          });
+
+          /* Os selos saem e a marca assume */
+          tl.to('#s5-seals', { autoAlpha: 0, y: -46, scale: 0.97, duration: 0.34, ease: 'power2.in' }, 2.99);
+
+          tl.from('#s5-glow', { autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 3.38);
+          tl.from('#s5-mark', { autoAlpha: 0, scale: 0.6, duration: 0.56, ease: 'back.out(1.8)' }, 3.44);
+          tl.from('#s5-word', { autoAlpha: 0, y: 30, duration: 0.44, ease: 'power3.out' }, 3.52);
+          tl.fromTo(
+            '#s5-rule',
+            { autoAlpha: 0, scaleX: 0 },
+            { autoAlpha: 1, scaleX: 1, duration: 0.5, ease: 'power3.out' },
+            3.58,
+          );
+
+          /* Strong cue 21.59 → a frase fecha o vídeo */
+          tl.from('#s5-tag', { autoAlpha: 0, y: 28, duration: 0.5, ease: 'power3.out' }, 3.68);
+
+          tl.to('#s5', { autoAlpha: 0, duration: 0.01 }, 5.56);
+          window.__timelines = window.__timelines || {};
+          window.__timelines['s5'] = tl;
+          tl.seek(0);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

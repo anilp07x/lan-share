@@ -148,14 +148,6 @@
   background: transparent;
 }
 
-/* luz morta no hover do cartão de anexo (sem sombra pesada, minimal) */
-.attachment-card {
-  transition: border-color 0.2s ease;
-}
-.attachment-card:hover {
-  border-color: color-mix(in srgb, var(--ring) 40%, var(--border));
-}
-
 /* ── animações próprias (transform/opacity, desligadas com reduced-motion) ── */
 
 @keyframes reveal {
@@ -233,6 +225,99 @@
   }
 }
 
+/* brilho que varre o cartão quando o PIN é aceite */
+@keyframes sheen {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+/* check que desenha o traço do "sucesso" */
+@keyframes draw-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* anel que pulsa à volta do selo de sucesso */
+@keyframes success-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(4%, -5%, 0) scale(1.08);
+  }
+  66% {
+    transform: translate3d(-4%, 4%, 0) scale(0.95);
+  }
+}
+
+/* tooltip / menu — escala suave a partir da origem */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pop-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* halo pulsante do indicador "ligado" */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 0%, transparent);
+  }
+}
+
+/* brilho pulsante no último slot vazio do PIN — pista de "faltam dígitos" */
+@keyframes slot-hint {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ring) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--ring) 14%, transparent);
+  }
+}
+
 @utility animate-reveal {
   animation: reveal 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
 }
@@ -254,6 +339,78 @@
 @utility animate-toast-in {
   animation: toast-in 0.18s ease-out backwards;
 }
+@utility animate-success-pop {
+  animation: success-pop 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+}
+@utility animate-aurora {
+  animation: aurora-drift 26s ease-in-out infinite;
+}
+@utility animate-slot-hint {
+  animation: slot-hint 1.8s ease-in-out infinite;
+}
+@utility animate-slot-pop {
+  animation: slot-pop 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@utility animate-tooltip-in {
+  animation: pop-in-top 0.14s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+}
+@utility animate-menu-in {
+  animation: pop-in 0.15s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+}
+@utility animate-pulse-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+/* brilho de "a processar" no título do anexo (usado pelo Attachment state=uploading/processing) */
+@keyframes shimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+@utility shimmer {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--foreground) 45%, transparent),
+    var(--foreground),
+    color-mix(in srgb, var(--foreground) 45%, transparent)
+  );
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shimmer 2s linear infinite;
+}
+
+/* barras de deslocamento escondidas (grupos horizontais de anexos) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* esbatimento nas pontas de uma faixa com scroll horizontal */
+@utility scroll-fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+}
+
+/* varredura de luz no cartão de sucesso */
+.sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--foreground) 8%, transparent),
+    transparent
+  );
+  animation: sheen 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .animate-reveal,
@@ -262,7 +419,111 @@
   .animate-float,
   .animate-fade-in,
   .animate-dialog-in,
-  .animate-toast-in {
+  .animate-toast-in,
+  .animate-success-pop,
+  .animate-aurora,
+  .animate-slot-hint,
+  .animate-slot-pop,
+  .animate-tooltip-in,
+  .animate-menu-in,
+  .animate-pulse-ring {
     animation: none;
+  }
+  .sheen::after {
+    display: none;
+  }
+  /* o shimmer usa color:transparent — sem animação tem de voltar a ter cor própria,
+     senão o texto do anexo em carregamento fica invisível */
+  .shimmer {
+    animation: none;
+    background-image: none;
+    color: inherit;
+  }
+  .check-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── ecrã de login ─────────────────────────────────────────────────────── */
+
+/* fundo aurora: manchas de cor Extremely suaves atrás do cartão */
+.aurora {
+  background-image: radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 88% 12%, color-mix(in srgb, var(--accent-foreground) 10%, transparent), transparent 70%),
+    radial-gradient(65% 55% at 78% 92%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 70%),
+    radial-gradient(45% 40% at 18% 88%, color-mix(in srgb, var(--success) 8%, transparent), transparent 70%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .aurora {
+    background-image: radial-gradient(60% 50% at 12% 8%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%),
+      radial-gradient(50% 45% at 88% 12%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 70%),
+      radial-gradient(65% 55% at 78% 92%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%),
+      radial-gradient(45% 40% at 18% 88%, color-mix(in srgb, var(--success) 12%, transparent), transparent 70%);
+  }
+}
+
+/* grelha ténue por cima do aurora — dá textura sem pesar */
+.aurora-grid {
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(70% 60% at 50% 40%, #000 30%, transparent 100%);
+}
+
+/* cartão de vidro do login */
+.glass-card {
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 12px 32px -12px color-mix(in srgb, var(--foreground) 18%, transparent),
+    0 40px 80px -32px color-mix(in srgb, var(--foreground) 22%, transparent);
+}
+
+/* anel de gradiente à volta do ícone da marca */
+.brand-ring {
+  background: conic-gradient(
+    from 140deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 35%, transparent),
+    color-mix(in srgb, var(--success) 60%, transparent),
+    var(--primary)
+  );
+}
+
+/* texto com gradiente */
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--foreground) 0%,
+    color-mix(in srgb, var(--foreground) 55%, var(--primary)) 55%,
+    var(--primary) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* check desenhado do zero */
+.check-draw {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: draw-check 0.45s 0.15s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* slot do PIN preenchido — salto discreto à entrada do dígito */
+@keyframes slot-pop {
+  0% {
+    transform: scale(0.9);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
   }
 }

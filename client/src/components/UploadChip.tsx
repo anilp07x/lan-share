@@ -1,7 +1,17 @@
 import Icon from './Icon.tsx'
 import { formatBytes } from '../lib/format.ts'
-import { cn } from '../lib/utils.ts'
 import { Button } from './ui/button.tsx'
+import { Progress } from './ui/progress.tsx'
+import { Spinner } from './ui/spinner.tsx'
+import {
+  Attachment,
+  AttachmentActions,
+  AttachmentAction,
+  AttachmentContent,
+  AttachmentDescription,
+  AttachmentMedia,
+  AttachmentTitle,
+} from './ui/attachment.tsx'
 
 export type UploadStatus = 'waiting' | 'uploading' | 'done' | 'error'
 
@@ -14,6 +24,14 @@ export interface UploadTask {
   error?: string
 }
 
+/** O UploadStatus mapeia directamente nos estados do Attachment. */
+const attachmentState = {
+  waiting: 'idle',
+  uploading: 'uploading',
+  done: 'done',
+  error: 'error',
+} as const satisfies Record<UploadStatus, 'idle' | 'uploading' | 'processing' | 'error' | 'done'>
+
 interface UploadChipProps {
   task: UploadTask
   active: boolean
@@ -24,65 +42,72 @@ interface UploadChipProps {
 export default function UploadChip({ task, active, onRemove, onRetry }: UploadChipProps) {
   const { file, status } = task
 
+  const meta =
+    status === 'error' && task.error
+      ? `${formatBytes(file.size)} · ${task.error}`
+      : status === 'waiting'
+        ? `${formatBytes(file.size)} · na fila`
+        : status === 'done'
+          ? `${formatBytes(file.size)} · enviado`
+          : formatBytes(file.size)
+
   return (
-    <div
+    <Attachment
+      state={attachmentState[status]}
+      size="sm"
       data-chip="true"
-      className={cn(
-        'border-border bg-muted/50 flex w-full items-center gap-2.5 rounded-xl border p-1.5 sm:max-w-xs',
-        active && 'border-ring/50',
-        status === 'error' && 'border-destructive/60',
-      )}
+      className="w-full focus-within:ring-ring/50 focus-within:ring-1 sm:max-w-xs"
     >
       {task.thumbUrl ? (
-        <img src={task.thumbUrl} alt="" className="bg-muted size-9 shrink-0 rounded-lg object-cover" />
+        <AttachmentMedia variant="image">
+          <img src={task.thumbUrl} alt="" />
+        </AttachmentMedia>
       ) : (
-        <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+        <AttachmentMedia>
           <Icon name={file.type.startsWith('image/') ? 'image' : 'file'} className="size-4" />
-        </div>
+        </AttachmentMedia>
       )}
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <p className="truncate text-xs font-medium" title={file.name}>
-            {file.name}
-          </p>
+      <AttachmentContent>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {/* nos estados uploading/processing o título ganha o shimmer do primitivo */}
+          <AttachmentTitle title={file.name}>{file.name}</AttachmentTitle>
           {status === 'uploading' ? (
-            <span className="text-muted-foreground shrink-0 text-[11px]">{task.progress}%</span>
+            <span className="text-muted-foreground shrink-0 text-[11px] tabular-nums">{task.progress}%</span>
           ) : null}
-          {status === 'error' ? <span className="text-destructive shrink-0 text-[11px]">Erro</span> : null}
           {status === 'done' ? <Icon name="check" className="text-success size-3.5 shrink-0" /> : null}
         </div>
-        <p className="text-muted-foreground truncate text-[11px]">
-          {formatBytes(file.size)}
-          {status === 'error' && task.error ? ` · ${task.error}` : ''}
-        </p>
-        {status === 'uploading' ? (
-          <div className="bg-muted mt-1 h-0.5 overflow-hidden rounded-full" aria-hidden="true">
-            <div className="bg-primary h-full transition-[width] duration-200" style={{ width: `${task.progress}%` }} />
-          </div>
-        ) : null}
-      </div>
 
-      <div className="flex shrink-0 items-center gap-0.5">
+        <AttachmentDescription>{meta}</AttachmentDescription>
+
         {status === 'uploading' ? (
-          <Icon name="loader" className="text-muted-foreground size-3.5 animate-spin" />
+          <Progress
+            value={task.progress}
+            className={task.progress === 0 ? 'animate-pulse' : undefined}
+            aria-label={`A enviar ${file.name}`}
+          />
         ) : null}
+      </AttachmentContent>
+
+      <AttachmentActions className="gap-0.5">
+        {status === 'uploading' ? <Spinner className="text-muted-foreground size-3.5" /> : null}
         {status === 'error' ? (
-          <Button variant="outline" size="sm" className="h-7 gap-1 px-2 text-[11px]" onClick={() => onRetry(task.key)}>
+          <Button variant="outline" size="xs" className="gap-1 px-2 text-[11px]" onClick={() => onRetry(task.key)}>
             <Icon name="retry" className="size-3" />
             Reenviar
           </Button>
         ) : null}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8 text-muted-foreground"
-          onClick={() => onRemove(task.key)}
+        <AttachmentAction
+          size="icon-sm"
+          title={status === 'uploading' ? 'Cancelar envio' : `Remover ${file.name}`}
           aria-label={status === 'uploading' ? 'Cancelar envio' : `Remover ${file.name}`}
+          onClick={() => onRemove(task.key)}
         >
           <Icon name="x" className="size-3.5" />
-        </Button>
-      </div>
-    </div>
+        </AttachmentAction>
+      </AttachmentActions>
+
+      {active ? <span className="sr-only">A enviar agora</span> : null}
+    </Attachment>
   )
 }

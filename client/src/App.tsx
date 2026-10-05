@@ -6,6 +6,7 @@ import { WsClient, type WsStatus } from './ws.ts'
 import Login from './components/Login.tsx'
 import Feed from './components/Feed.tsx'
 import { Toaster } from './lib/toast.tsx'
+import { TooltipProvider } from './components/ui/tooltip.tsx'
 
 type AuthState = 'loading' | 'unauthed' | 'authed'
 
@@ -151,5 +152,5 @@ export default function App() {
     )
   }
 
-  return screen
+  return <TooltipProvider delayDuration={350}>{screen}</TooltipProvider>
 }

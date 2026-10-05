@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LAN Share — cena 2</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        #s2 .aurorawrap {
+          position: absolute;
+          inset: 0;
+        }
+        #s2 .breathe {
+          position: absolute;
+          inset: -140px;
+          background:
+            radial-gradient(560px 460px at 24% 26%, rgba(41, 151, 255, 0.3), rgba(41, 151, 255, 0) 70%),
+            radial-gradient(680px 520px at 80% 70%, rgba(48, 209, 88, 0.2), rgba(48, 209, 88, 0) 72%);
+          transform: scale(calc(1 + var(--bass) * 0.05));
+          opacity: calc(0.7 + var(--bass) * 0.3);
+        }
+        #s2 .gridwrap {
+          position: absolute;
+          inset: 0;
+        }
+        #s2 .grid {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(#ffffff0f 1px, transparent 1px),
+            linear-gradient(90deg, #ffffff0f 1px, transparent 1px);
+          background-size: 44px 44px;
+          -webkit-mask-image: radial-gradient(62% 62% at 50% 44%, #000 18%, transparent 76%);
+          mask-image: radial-gradient(62% 62% at 50% 44%, #000 18%, transparent 76%);
+          opacity: calc(0.45 + var(--mid) * 0.35);
+        }
+        #s2 .brand {
+          position: absolute;
+          left: 120px;
+          top: 84px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          font-size: 34px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+        #s2 .brand .icon {
+          width: 40px;
+          height: 40px;
+          color: var(--primary);
+        }
+        #s2 .badge {
+          position: absolute;
+          right: 120px;
+          top: 84px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 22px;
+          border: 1px solid var(--border-2);
+          border-radius: 999px;
+          font-size: 24px;
+          color: var(--muted);
+        }
+        #s2 .badge i {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: var(--success);
+        }
+        #s2 .left {
+          position: absolute;
+          left: 120px;
+          top: 300px;
+          width: 940px;
+        }
+        #s2 .left h1 {
+          font-size: 88px;
+        }
+        #s2 .foot {
+          position: absolute;
+          left: 120px;
+          bottom: 92px;
+          display: flex;
+          gap: 40px;
+          font-size: 26px;
+          color: var(--muted);
+        }
+        #s2 .foot span {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        #s2 .foot .icon {
+          width: 24px;
+          height: 24px;
+          color: var(--success);
+        }
+        #s2 .card {
+          position: absolute;
+          left: 1150px;
+          top: 200px;
+          width: 620px;
+          height: 680px;
+          padding: 46px 44px;
+          background: rgba(28, 28, 30, 0.72);
+          border: 1px solid var(--border-2);
+          border-radius: 40px;
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          box-shadow: 0 60px 160px rgba(0, 0, 0, 0.6);
+          text-align: center;
+        }
+        #s2 .stack {
+          position: relative;
+          height: 42px;
+        }
+        #s2 .stack span {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+        #s2 .eyebrow {
+          font-size: 38px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+        #s2 .sub {
+          margin-top: 12px;
+          font-size: 26px;
+          color: var(--muted);
+        }
+        #s2 .seal {
+          width: 132px;
+          height: 132px;
+          margin: 30px auto 34px;
+          border-radius: 50%;
+          background: conic-gradient(from 200deg, #2997ff, #30d158 55%, #2997ff);
+          display: grid;
+          place-items: center;
+        }
+        #s2 .seal .inner {
+          width: 108px;
+          height: 108px;
+          border-radius: 50%;
+          background: #101014;
+          display: grid;
+          place-items: center;
+        }
+        #s2 .seal .icon {
+          width: 46px;
+          height: 46px;
+          color: var(--muted);
+        }
+        #s2 .seal .check {
+          width: 50px;
+          height: 50px;
+          color: var(--success);
+        }
+        #s2 .checkpath {
+          stroke-dasharray: 30;
+          stroke-dashoffset: 30;
+        }
+        #s2 .slots {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+        }
+        #s2 .slot {
+          width: 68px;
+          height: 68px;
+          border: 1px solid var(--border-2);
+          border-radius: 16px;
+          background: #ffffff08;
+          display: grid;
+          place-items: center;
+          font-family: var(--mono);
+          font-size: 30px;
+        }
+        #s2 .slot.on {
+          border-color: var(--primary);
+          background: rgba(41, 151, 255, 0.14);
+        }
+        #s2 .btn {
+          position: relative;
+          overflow: hidden;
+          margin-top: 36px;
+          height: 64px;
+          border-radius: 16px;
+          background: var(--primary);
+          color: #ffffff;
+          font-size: 27px;
+          font-weight: 600;
+          display: grid;
+          place-items: center;
+        }
+        #s2 .btn span {
+          grid-area: 1 / 1;
+        }
+        #s2 .sheen {
+          position: absolute;
+          left: -260px;
+          top: -180px;
+          width: 220px;
+          height: 620px;
+          transform: rotate(20deg);
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.16) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          pointer-events: none;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
+        <section id="s2" class="scene">
+          <div id="s2-aurora" class="aurorawrap">
+            <div class="breathe"></div>
+          </div>
+          <div id="s2-grid" class="gridwrap">
+            <div class="grid"></div>
+          </div>
+
+          <div id="s2-brand" class="brand">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" x2="15.42" y1="13.51" y2="17.49" />
+              <line x1="15.41" x2="8.59" y1="6.51" y2="10.49" />
+            </svg>
+            <span>LAN Share</span>
+          </div>
+
+          <div id="s2-badge" class="badge"><i></i>Rede local</div>
+
+          <div id="s2-left" class="left">
+            <h1>
+              Partilha o que importa,<br /><span class="grad">dentro da tua rede.</span>
+            </h1>
+          </div>
+
+          <div id="s2-card" class="card">
+            <div class="stack">
+              <span id="s2-title" class="eyebrow" data-layout-allow-overlap data-layout-allow-occlusion>Bem-vindo de volta</span>
+              <span id="s2-title2" class="eyebrow grad" style="opacity: 0; visibility: hidden">Sessão iniciada</span>
+            </div>
+            <div class="stack sub">
+              <span id="s2-sub" data-layout-allow-overlap>PIN de 6 dígitos</span>
+              <span id="s2-sub2" style="opacity: 0; visibility: hidden">A abrir o teu espaço partilhado…</span>
+            </div>
+
+            <div id="s2-seal" class="seal">
+              <div class="inner">
+                <svg id="s2-lock" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <svg id="s2-check" class="icon check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0; visibility: hidden">
+                  <path id="s2-checkpath" class="checkpath" d="M20 6 9 17l-5-5" />
+                </svg>
+              </div>
+            </div>
+
+            <div class="slots">
+              <div id="s2-d1" class="slot"><span>4</span></div>
+              <div id="s2-d2" class="slot"><span>8</span></div>
+              <div id="s2-d3" class="slot"><span>2</span></div>
+              <div id="s2-d4" class="slot"><span>1</span></div>
+              <div id="s2-d5" class="slot"><span>6</span></div>
+              <div id="s2-d6" class="slot"><span>0</span></div>
+            </div>
+
+            <div id="s2-btn" class="btn">
+              <span id="s2-btn-a" data-layout-allow-overlap>Entrar</span>
+              <span id="s2-btn-b" style="opacity: 0; visibility: hidden">A entrar…</span>
+            </div>
+
+            <div id="s2-sheen2" class="sheen" data-layout-allow-overflow style="left: -260px"></div>
+          </div>
+
+          <div id="s2-foot" class="foot">
+            <span>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Sessão encriptada
+            </span>
+            <span>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m2 2 20 20" />
+                <path d="M5.782 5.782A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.307-.193" />
+                <path d="M21.532 16.5A4.5 4.5 0 0 0 17.5 12h-1.79A7.008 7.008 0 0 0 10 5.07" />
+              </svg>
+              Funciona sem internet
+            </span>
+          </div>
+        </section>
+      </div>
+
+      <script>
+        /* Cena 2 · 4.0–8.0 s. Tempos locais = globais − 4.
+           Cues: strong 5.28 / 5.81 (dígitos 3 e 5), 6.34 (selo de sucesso, LOCK).
+           Grid: 114.84 BPM → 0.5225 s/beat. */
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          var PIN = '482160';
+          var slots = [];
+          for (var i = 1; i <= 6; i++) slots.push(document.getElementById('s2-d' + i));
+
+          /* Um único tween com steps(6) — contador proxy, seek-safe. */
+          var cnt = { n: 0 };
+          function paint() {
+            for (var j = 0; j < 6; j++) {
+              var on = j < cnt.n;
+              slots[j].classList.toggle('on', on);
+              slots[j].firstChild.style.visibility = on ? 'visible' : 'hidden';
+              slots[j].firstChild.style.opacity = on ? '1' : '0';
+            }
+          }
+
+          tl.from('#s2-aurora', { autoAlpha: 0, duration: 0.6, ease: 'power2.out' }, 0);
+          tl.from('#s2-grid', { autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 0.1);
+          tl.from('#s2-brand', { autoAlpha: 0, x: -26, duration: 0.4, ease: 'power3.out' }, 0.14);
+          tl.from('#s2-badge', { autoAlpha: 0, x: 26, duration: 0.4, ease: 'power3.out' }, 0.2);
+          tl.from('#s2-card', { autoAlpha: 0, y: 46, scale: 0.97, duration: 0.52, ease: 'power3.out' }, 0.16);
+          tl.from('#s2-left', { autoAlpha: 0, x: -30, duration: 0.5, ease: 'power3.out' }, 0.26);
+          tl.from('#s2-foot', { autoAlpha: 0, y: 16, duration: 0.45, ease: 'power2.out' }, 0.36);
+
+          tl.to(cnt, {
+            n: 6,
+            duration: 1.56,
+            ease: 'steps(6)',
+            onUpdate: paint,
+          }, 0.51);
+          paint();
+
+          /* O botão aceita assim que o PIN fica completo */
+          tl.to('#s2-btn', { backgroundColor: '#30d158', duration: 0.3, ease: 'power2.out' }, 2.05);
+          tl.to('#s2-btn-a', { autoAlpha: 0, duration: 0.16 }, 2.16);
+          tl.to('#s2-btn-b', { autoAlpha: 1, duration: 0.2 }, 2.16);
+
+          /* Strong cue 6.34 → selo: o cadeado torna-se um check desenhado */
+          tl.to('#s2-title', { autoAlpha: 0, y: -14, duration: 0.22, ease: 'power2.in' }, 2.34);
+          tl.fromTo('#s2-title2', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.34, ease: 'power3.out' }, 2.36);
+          tl.to('#s2-sub', { autoAlpha: 0, duration: 0.2 }, 2.4);
+          tl.fromTo('#s2-sub2', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.32, ease: 'power2.out' }, 2.44);
+          tl.to('#s2-lock', { autoAlpha: 0, scale: 0.7, duration: 0.24, ease: 'power2.in' }, 2.34);
+          tl.fromTo('#s2-check', { autoAlpha: 0, scale: 0.7 }, { autoAlpha: 1, scale: 1, duration: 0.34, ease: 'back.out(2)' }, 2.38);
+          tl.fromTo('#s2-checkpath', { strokeDashoffset: 30 }, { strokeDashoffset: 0, duration: 0.42, ease: 'power2.out' }, 2.4);
+          tl.fromTo('#s2-seal', { scale: 0.82 }, { scale: 1, duration: 0.66, ease: 'elastic.out(1, 0.45)' }, 2.34);
+          tl.fromTo('#s2-btn', { scale: 1.03 }, { scale: 1, duration: 0.4, ease: 'power2.out' }, 2.34);
+
+          /* Brilho que atravessa o cartão */
+          tl.fromTo(
+            '#s2-sheen2',
+            { x: 0, autoAlpha: 0 },
+            { x: 520, duration: 0.62, ease: 'power2.inOut', onStart: function () { gsap.set('#s2-sheen2', { autoAlpha: 1 }); } },
+            2.46,
+          );
+          tl.to('#s2-sheen2', { autoAlpha: 0, duration: 0.18 }, 3.06);
+
+          /* Corte limpo: cada cena tem fundo opaco, por isso não há fade de saída. */
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines['s2'] = tl;
+          tl.to('#s2', { autoAlpha: 0, duration: 0.01 }, 3.97);
+          tl.seek(0);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

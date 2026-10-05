@@ -1,39 +1,110 @@
+import { useEffect, useRef, useState } from 'react'
 import Icon from './Icon.tsx'
-import type { Message } from '../types.ts'
+import type { FileMessage, TextMessage } from '../types.ts'
 import { formatTime } from '../lib/format.ts'
 import { useCopied } from '../hooks/useCopied.ts'
-import { Button } from './ui/button.tsx'
+import { cn } from '../lib/utils.ts'
+import { toast } from '../lib/toast.tsx'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx'
+import { Message, MessageContent, MessageFooter } from './ui/message.tsx'
+import { Bubble, BubbleContent } from './ui/bubble.tsx'
 import Attachment from './Attachment.tsx'
 
-export default function MessageItem({ message }: { message: Message }) {
-  const { copied, copy } = useCopied()
+export default function MessageItem({ message }: { message: TextMessage | FileMessage }) {
+  if (message.kind === 'text') return <TextItem message={message} />
+  return <FileItem message={message} />
+}
 
-  if (message.kind === 'text') {
-    return (
-      <div className="group flex max-w-[min(100%,540px)] flex-col gap-0.5">
-        <p className="text-[17px] leading-relaxed break-words whitespace-pre-wrap">{message.body}</p>
-        <div className="flex items-center gap-1 pr-1">
-          <time className="text-muted-foreground text-xs">{formatTime(message.ts)}</time>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-1 h-7 gap-1 px-1.5 text-[11px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
-            onClick={() => void copy(message.body)}
-            disabled={copied}
-            title="Copiar texto"
-          >
-            {copied ? <Icon name="check" className="size-3 text-success" /> : <Icon name="copy" className="size-3" />}
-            <span>{copied ? 'Copiado' : 'Copiar'}</span>
-          </Button>
-        </div>
-      </div>
-    )
+function TextItem({ message }: { message: TextMessage }) {
+  const { copied, copy } = useCopied()
+  const [flash, setFlash] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
+
+  async function onCopy() {
+    const ok = await copy(message.body)
+    if (!ok) {
+      toast.error('Não consegui copiar. Selecciona o texto manualmente.')
+      return
+    }
+    setFlash(true)
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => setFlash(false), 1200)
   }
 
   return (
-    <div className="flex max-w-[min(94%,540px)] flex-col gap-0.5">
-      <Attachment file={message.file} />
-      <time className="text-muted-foreground pr-1 text-xs">{formatTime(message.ts)}</time>
-    </div>
+    <Message className="group max-w-[min(100%,540px)]">
+      <MessageContent>
+        {/* ghost = sem fundo nem padding: mantém o aspecto de "transcrição partilhada" */}
+        <Bubble variant="ghost" align="start">
+          <BubbleContent
+            className={cn(
+              'text-[17px] leading-relaxed break-words whitespace-pre-wrap transition-colors',
+              flash && 'text-primary',
+            )}
+          >
+            {message.body}
+          </BubbleContent>
+        </Bubble>
+
+        {/* meta: hora + copiar. O botão só aparece no hover em ponteiro fino;
+            em toque fica sempre visível (senão seria inalcançável). */}
+        <MessageFooter className="px-0">
+          <time
+            className="text-muted-foreground pl-1 tabular-nums"
+            dateTime={new Date(message.ts).toISOString()}
+          >
+            {formatTime(message.ts)}
+          </time>
+
+          <Tooltip>
+            <TooltipTrigger>
+              <button
+                type="button"
+                onClick={() => void onCopy()}
+                disabled={copied}
+                aria-label={copied ? 'Texto copiado' : 'Copiar texto'}
+                className={cn(
+                  'text-muted-foreground hover:text-foreground hover:bg-accent flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] transition-colors',
+                  'focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none',
+                  'disabled:pointer-events-none',
+                  // ponteiro fino: só no hover/foco; toque: sempre visível
+                  '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100',
+                  flash && 'text-success opacity-100',
+                )}
+              >
+                {copied ? <Icon name="check" className="text-success size-3" /> : <Icon name="copy" className="size-3" />}
+                <span className="sr-only sm:not-sr-only">{copied ? 'Copiado' : 'Copiar'}</span>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Copiar texto</TooltipContent>
+          </Tooltip>
+        </MessageFooter>
+      </MessageContent>
+    </Message>
+  )
+}
+
+function FileItem({ message }: { message: FileMessage }) {
+  return (
+    <Message className="max-w-[min(94%,540px)]">
+      <MessageContent className="gap-1">
+        <Attachment file={message.file} />
+        <MessageFooter className="px-0">
+          <time
+            className="text-muted-foreground pl-1 tabular-nums"
+            dateTime={new Date(message.ts).toISOString()}
+          >
+            {formatTime(message.ts)}
+          </time>
+        </MessageFooter>
+      </MessageContent>
+    </Message>
   )
 }

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "LAN Share — troca de texto e ficheiros na rede local, 100% offline, via browser.",
+  "author": "LAN Share",
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -15,7 +16,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json",
     "test": "node --test \"server/test/**/*.test.ts\"",
     "stress": "node scripts/stress.mjs",
-    "icons": "node scripts/gen-icons.mjs"
+    "icons": "node scripts/gen-icons.mjs",
+    "icons:app": "node scripts/gen-app-icons.mjs",
+    "build:server": "tsc -p tsconfig.build.json",
+    "app": "npm run build:server && electron .",
+    "app:dir": "npm run build:server && npm run build && electron-builder --dir",
+    "app:dist": "npm run build:server && npm run build && electron-builder --win nsis portable"
   },
   "dependencies": {
     "@fastify/cookie": "^11.1.2",
@@ -25,10 +31,12 @@
     "@fastify/static": "^10.1.4",
     "@fastify/websocket": "^11.3.1",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/qrcode": "^1.5.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fastify": "^5.12.5",
     "input-otp": "^1.5.0",
+    "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -41,8 +49,47 @@
     "@types/react-dom": "^19.3.0",
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
     "pngjs": "^7.0.0",
     "typescript": "^5.9.3",
     "vite": "^8.3.0"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.lanshare.app",
+    "productName": "LAN Share",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "server-dist/**/*",
+      "client/dist/**/*",
+      "build/tray.png",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LAN Share",
+      "artifactName": "LAN-Share-${version}-instalador.${ext}"
+    },
+    "portable": {
+      "artifactName": "LAN-Share-${version}-portable.${ext}"
+    }
   }
 }

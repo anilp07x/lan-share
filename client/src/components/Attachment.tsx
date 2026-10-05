@@ -6,7 +6,15 @@ import { cn } from '../lib/utils.ts'
 import { isPreviewable, formatBytes } from '../lib/format.ts'
 import { Badge } from './ui/badge.tsx'
 import { Button } from './ui/button.tsx'
-import { Dialog, DialogClose, DialogContent, DialogTitle } from './ui/dialog.tsx'
+import { Skeleton } from './ui/skeleton.tsx'
+import {
+  Attachment as AttachmentPrimitive,
+  AttachmentActions,
+  AttachmentAction,
+  AttachmentMedia,
+  AttachmentTrigger,
+} from './ui/attachment.tsx'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog.tsx'
 
 interface AttachmentKind {
   label: string
@@ -25,57 +33,160 @@ function attachmentKind(mime: string): AttachmentKind {
   return { label: 'Ficheiro', icon: 'file' }
 }
 
+/** O que o browser consegue mostrar inline sem depender do tipo de ficheiro. */
+type PreviewKind = 'image' | 'video' | 'audio' | 'none'
+
+function previewKind(file: FileMeta): PreviewKind {
+  // isPreviewable também protege contra imagens gigantes (limite de 20 MB)
+  if (isPreviewable(file)) return 'image'
+  if (file.mime.startsWith('image/')) return 'none'
+  if (file.mime.startsWith('video/')) return 'video'
+  if (file.mime.startsWith('audio/')) return 'audio'
+  return 'none'
+}
+
 export default function Attachment({ file }: { file: FileMeta }) {
   const [open, setOpen] = useState(false)
-  const preview = isPreviewable(file)
+  const [loaded, setLoaded] = useState(false)
+  const [failed, setFailed] = useState(false)
+
+  const kind = previewKind(file)
+  const canPreview = kind !== 'none'
   const downloadUrl = fileUrl(file.fileId)
-  const previewUrl = fileUrl(file.fileId, true)
+  const streamUrl = fileUrl(file.fileId, true)
   const { icon: kindIcon, label } = attachmentKind(file.mime)
-  const openPreview = () => setOpen(true)
+
+  const showSkeleton = canPreview && !loaded && !failed
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <figure className="attachment-card group border-border bg-card overflow-hidden rounded-xl border">
-        {preview ? (
-          <button
-            type="button"
-            onClick={openPreview}
-            className="bg-muted/40 relative block w-full cursor-zoom-in text-left"
-            aria-label={`Ver ${file.name}`}
+      <AttachmentPrimitive
+        state={failed ? 'error' : 'done'}
+        orientation={canPreview ? 'vertical' : 'horizontal'}
+        className={cn(
+          'max-w-full overflow-hidden',
+          canPreview ? 'w-[min(100%,420px)]' : 'w-[min(100%,360px)]',
+        )}
+      >
+        {/* ── preview ─────────────────────────────────────────────── */}
+        {canPreview ? (
+          <AttachmentMedia
+            variant="image"
+            className="group/preview bg-muted/40 aspect-video w-full rounded-none"
           >
-            <img src={previewUrl} alt={file.name} loading="lazy" className="aspect-video w-full object-cover" />
-            <div className="from-black/50 pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-            <Badge
-              className="bg-background/85 text-muted-foreground translate-y-1 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 absolute right-2.5 bottom-2.5 gap-1"
-              variant="outline"
-            >
-              <Icon name="expand" className="size-3" />
-              Ver
-            </Badge>
-          </button> 
-        ) : null} 
+            {failed ? (
+              /* fallback: o browser não conseguiu descodificar */
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1.5">
+                <Icon name="alert-circle" className="text-muted-foreground size-6" />
+                <span className="text-muted-foreground text-xs">Pré-visualização indisponível</span>
+              </div>
+            ) : (
+              <>
+                {showSkeleton ? <Skeleton className="aspect-video w-full rounded-none" /> : null}
 
-        <div className="flex items-center gap-3 p-3">
-          <div className={cn('bg-muted text-muted-foreground flex size-11 shrink-0 items-center justify-center rounded-xl')}>
-            <Icon name={kindIcon} className="size-5" />
-          </div>
+                {kind === 'image' ? (
+                  <img
+                    src={streamUrl}
+                    alt={file.name}
+                    loading="lazy"
+                    decoding="async"
+                    onLoad={() => setLoaded(true)}
+                    onError={() => setFailed(true)}
+                    className={cn(
+                      'aspect-video w-full object-cover transition-opacity duration-300',
+                      loaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                ) : null}
+
+                {kind === 'video' ? (
+                  <video
+                    src={streamUrl}
+                    preload="metadata"
+                    playsInline
+                    controls
+                    onLoadedData={() => setLoaded(true)}
+                    onError={() => setFailed(true)}
+                    className={cn(
+                      'aspect-video w-full bg-black object-contain transition-opacity duration-300',
+                      loaded ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                ) : null}
+
+                {kind === 'audio' ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-6">
+                    <span className="bg-primary/12 text-primary flex size-14 items-center justify-center rounded-full">
+                      <Icon name="audio" className="size-6" />
+                    </span>
+                    <audio
+                      src={streamUrl}
+                      preload="metadata"
+                      controls
+                      onLoadedData={() => setLoaded(true)}
+                      onError={() => setFailed(true)}
+                      className="h-9 w-full max-w-sm"
+                    />
+                  </div>
+                ) : null}
+
+                {/* dica de zoom só nas imagens */}
+                {kind === 'image' && !failed ? (
+                  <>
+                    <AttachmentTrigger
+                      className="cursor-zoom-in"
+                      aria-label={`Ampliar ${file.name}`}
+                      onClick={() => setOpen(true)}
+                    />
+                    <Badge
+                      className="bg-background/85 text-muted-foreground pointer-events-none absolute right-2.5 bottom-2.5 translate-y-1 gap-1 opacity-0 backdrop-blur transition-all duration-200 group-hover/preview:translate-y-0 group-hover/preview:opacity-100"
+                      variant="outline"
+                    >
+                      <Icon name="expand" className="size-3" />
+                      Ampliar
+                    </Badge>
+                  </>
+                ) : null}
+              </>
+            )}
+          </AttachmentMedia>
+        ) : null}
+
+        {/* ── metadados ──────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 p-2.5">
+          {!canPreview ? (
+            <AttachmentMedia>
+              <Icon name={failed ? 'alert-circle' : kindIcon} className="size-5" />
+            </AttachmentMedia>
+          ) : null}
 
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium" title={file.name}>
               {file.name}
             </p>
             <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-              <span>{formatBytes(file.size)}</span>
+              <span className="tabular-nums">{formatBytes(file.size)}</span>
               <span aria-hidden="true">·</span>
-              <span>{label}</span>
+              <span>{failed ? 'Não pré-visualizável' : label}</span>
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9"
+          <AttachmentActions>
+            {canPreview && !failed ? (
+              <AttachmentAction
+                variant="secondary"
+                size="icon-sm"
+                title="Ampliar"
+                aria-label={`Ampliar ${file.name}`}
+                onClick={() => setOpen(true)}
+              >
+                <Icon name="expand" className="size-4" />
+              </AttachmentAction>
+            ) : null}
+
+            <AttachmentAction
+              variant="secondary"
+              size="icon-sm"
               title="Descarregar"
               aria-label={`Descarregar ${file.name}`}
               asChild
@@ -83,28 +194,45 @@ export default function Attachment({ file }: { file: FileMeta }) {
               <a href={downloadUrl} download>
                 <Icon name="download" className="size-4" />
               </a>
-            </Button>
-
-            {preview ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9"
-                title="Abrir"
-                onClick={openPreview}
-                aria-label={`Abrir ${file.name}`}
-              >
-                <Icon name="expand" className="size-4" />
-              </Button>
-            ) : null}
-          </div>
+            </AttachmentAction>
+          </AttachmentActions>
         </div>
-      </figure>
+      </AttachmentPrimitive>
 
-      <DialogContent className="border-border bg-card max-w-[min(92vw,920px)] gap-4 overflow-y-auto border p-4 pt-10 shadow-none sm:max-w-[92vw]">
-        <DialogTitle className="sr-only">{file.name}</DialogTitle>
-        <img src={previewUrl} alt={file.name} className="mx-auto max-h-[60dvh] w-auto max-w-full rounded-lg object-contain" />
-        <div className="flex items-center justify-center gap-2 pb-1">
+      {/* ── lightbox ─────────────────────────────────────────────── */}
+      <DialogContent className="border-border bg-card max-w-[min(94vw,960px)] overflow-hidden border p-0 shadow-none sm:max-w-[94vw]">
+        <DialogHeader className="gap-1 px-4 pt-4">
+          <DialogTitle className="truncate pr-8 text-sm" title={file.name}>
+            {file.name}
+          </DialogTitle>
+          <DialogDescription className="flex items-center gap-1.5 text-xs">
+            <span className="tabular-nums">{formatBytes(file.size)}</span>
+            <span aria-hidden="true">·</span>
+            <span>{label}</span>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="bg-muted/50 flex max-h-[68dvh] items-center justify-center overflow-auto p-3">
+          {kind === 'image' ? (
+            <img
+              src={streamUrl}
+              alt={file.name}
+              className="max-h-[62dvh] w-auto max-w-full rounded-lg object-contain"
+            />
+          ) : null}
+          {kind === 'video' ? (
+            <video src={streamUrl} controls autoPlay playsInline className="max-h-[62dvh] w-auto max-w-full rounded-lg">
+              O teu navegador não suporta este vídeo.
+            </video>
+          ) : null}
+          {kind === 'audio' ? (
+            <audio src={streamUrl} controls autoPlay className="w-full max-w-md">
+              O teu navegador não suporta este áudio.
+            </audio>
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-center gap-2 p-3 pt-1">
           <Button variant="outline" size="sm" className="gap-1.5" asChild>
             <a href={downloadUrl} download>
               <Icon name="download" className="size-3.5" />

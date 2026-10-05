@@ -1,11 +1,22 @@
-import { useEffect, useRef, useState, type ChangeEvent, type ClipboardEvent, type FormEvent, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react'
 import { toast } from '../lib/toast.tsx'
 import Icon from './Icon.tsx'
 import type { Message } from '../types.ts'
 import { errorMessage, isAuthError, postMessage, uploadFile } from '../api.ts'
 import { cn } from '../lib/utils.ts'
+import { prefersReducedMotion } from '../lib/motion.ts'
 import { PREVIEW_MAX_BYTES } from '../lib/format.ts'
+import { Spinner } from './ui/spinner.tsx'
 import { Button } from './ui/button.tsx'
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip.tsx'
 import UploadChip, { type UploadTask } from './UploadChip.tsx'
 
 interface ComposerProps {
@@ -13,6 +24,9 @@ interface ComposerProps {
   onMessage: (message: Message) => void
   onAuthFail: () => void
 }
+
+/** Acima disto o texto fica demasiado para o feed em telemóvel. */
+const MAX_CHARS = 2000
 
 let taskKey = 0
 
@@ -24,7 +38,9 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
   const [processing, setProcessing] = useState(false)
   const [dragDepth, setDragDepth] = useState(0)
   const [announce, setAnnounce] = useState('')
+  const [focused, setFocused] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const textRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
   const mountedRef = useRef(true)
   const desktopRef = useRef(true)
@@ -40,12 +56,25 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
 
   function enqueueFiles(files: File[]) {
     if (files.length === 0) return
+    const tooBig = files.filter((f) => f.size > PREVIEW_MAX_BYTES * 10)
+    const ok = tooBig.length > 0 ? files.filter((f) => f.size <= PREVIEW_MAX_BYTES * 10) : files
+    if (tooBig.length > 0) {
+      toast.error(
+        tooBig.length === 1
+          ? `${tooBig[0]?.name ?? 'Ficheiro'} excede o limite de tamanho.`
+          : `${tooBig.length} ficheiros excedem o limite de tamanho.`,
+      )
+    }
+    if (ok.length === 0) return
     setTasks((prev) => [
       ...prev,
-      ...files.map((file) => ({
+      ...ok.map((file) => ({
         key: ++taskKey,
         file,
-        thumbUrl: file.type.startsWith('image/') && file.size <= PREVIEW_MAX_BYTES ? URL.createObjectURL(file) : undefined,
+        thumbUrl:
+          file.type.startsWith('image/') && file.size <= PREVIEW_MAX_BYTES
+            ? URL.createObjectURL(file)
+            : undefined,
         progress: 0,
         status: 'waiting' as const,
       })),
@@ -60,7 +89,9 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
   }
 
   function retryTask(key: number) {
-    setTasks((prev) => prev.map((t) => (t.key === key ? { ...t, status: 'waiting' as const, error: undefined } : t)))
+    setTasks((prev) =>
+      prev.map((t) => (t.key === key ? { ...t, status: 'waiting' as const, error: undefined } : t)),
+    )
   }
 
   // fila de uploads: um de cada vez, só depois de o utilizador enviar
@@ -73,13 +104,17 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
     const ac = new AbortController()
     abortRef.current = ac
     uploadFile(next.file, (p) => {
-      setTasks((prev) => prev.map((t) => (t.key === next.key ? { ...t, progress: p.percent } : t)))
+      setTasks((prev) =>
+        prev.map((t) => (t.key === next.key ? { ...t, progress: p.percent, status: 'uploading' } : t)),
+      )
     }, ac.signal)
       .then(({ message }) => {
         if (!mountedRef.current) return
         onMessage(message)
         setAnnounce(`Anexo enviado: ${next.file.name}`)
-        setTasks((prev) => prev.map((t) => (t.key === next.key ? { ...t, status: 'done' as const } : t)))
+        setTasks((prev) =>
+          prev.map((t) => (t.key === next.key ? { ...t, status: 'done' as const } : t)),
+        )
         setTimeout(() => {
           if (mountedRef.current) setTasks((prev) => prev.filter((t) => t.key !== next.key))
         }, 1500)
@@ -97,7 +132,9 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
         const msg = errorMessage(err)
         toast.error(msg)
         setAnnounce(`Falha ao enviar ${next.file.name}`)
-        setTasks((prev) => prev.map((t) => (t.key === next.key ? { ...t, status: 'error' as const, error: msg } : t)))
+        setTasks((prev) =>
+          prev.map((t) => (t.key === next.key ? { ...t, status: 'error' as const, error: msg } : t)),
+        )
       })
       .finally(() => {
         abortRef.current = null
@@ -124,6 +161,7 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
       const { message } = await postMessage(body)
       onMessage(message)
       setText('')
+      textRef.current?.focus()
     } catch (err) {
       if (isAuthError(err)) {
         onAuthFail()
@@ -188,21 +226,36 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
 
   const hasContent = text.trim().length > 0 || tasks.length > 0
   const canSend = !sending && hasContent
+  const remaining = MAX_CHARS - text.length
+  const nearLimit = remaining <= 200
+  const reduced = prefersReducedMotion()
 
   return (
     <>
-      <div className="border-border bg-card rounded-2xl border">
+      <div
+        className={cn(
+          'bg-card rounded-2xl border transition-[border-color,box-shadow] duration-200',
+          focused ? 'border-ring/50 shadow-ring/10 shadow-lg' : 'border-border',
+          !connected && 'opacity-90',
+        )}
+      >
         {!connected ? (
-          <div className="flex items-center gap-1.5 px-3 pt-2 text-[11px] text-muted-foreground">
-            <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
-            Ligação perdida — o envio vai tentar novamente.
+          <div className="text-muted-foreground flex items-center gap-1.5 px-3 pt-2 text-[11px]">
+            <span className="bg-warning size-1.5 shrink-0 animate-pulse rounded-full" aria-hidden="true" />
+            Ligação instável — o envio vai tentar novamente.
           </div>
         ) : null}
 
         {tasks.length > 0 ? (
           <div className="feed-scroll flex max-h-[38dvh] flex-wrap content-start gap-1.5 px-2 pt-2">
             {tasks.map((task) => (
-              <UploadChip key={task.key} task={task} active={activeKey === task.key} onRemove={removeTask} onRetry={retryTask} />
+              <UploadChip
+                key={task.key}
+                task={task}
+                active={activeKey === task.key}
+                onRemove={removeTask}
+                onRetry={retryTask}
+              />
             ))}
           </div>
         ) : null}
@@ -216,55 +269,101 @@ export default function Composer({ connected, onMessage, onAuthFail }: ComposerP
             onChange={onPickerChange}
             aria-label="Escolher ficheiros"
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground shrink-0 rounded-full"
-            onClick={() => fileRef.current?.click()}
-            aria-label="Anexar ficheiro"
-            title="Anexar ficheiro"
-          >
-            <Icon name="plus" className="size-5" />
-          </Button>
 
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onPaste={onPaste}
-            onKeyDown={onKeyDown}
-            rows={1}
-            placeholder="Escreve uma mensagem…"
-            aria-label="Mensagem"
-            className="min-h-11 max-h-40 min-w-0 flex-1 resize-none place-self-center rounded-xl bg-transparent py-2.5 text-[17px] leading-relaxed outline-none"
-            style={{ fieldSizing: 'content' }}
-          />
+          <Tooltip>
+            <TooltipTrigger>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground shrink-0 rounded-full"
+                onClick={() => fileRef.current?.click()}
+                aria-label="Anexar ficheiro"
+              >
+                <Icon name="plus" className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Anexar ficheiro</TooltipContent>
+          </Tooltip>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <textarea
+              ref={textRef}
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, MAX_CHARS))}
+              onPaste={onPaste}
+              onKeyDown={onKeyDown}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              rows={1}
+              placeholder="Escreve uma mensagem…"
+              aria-label="Mensagem"
+              className="max-h-40 min-h-11 w-full min-w-0 resize-none bg-transparent py-2.5 text-[17px] leading-relaxed outline-none placeholder:text-muted-foreground/70"
+              style={{ fieldSizing: 'content' }}
+            />
+            {nearLimit ? (
+              <div
+                className={cn(
+                  'text-right text-[11px] tabular-nums',
+                  remaining <= 0 ? 'text-destructive font-medium' : 'text-muted-foreground',
+                )}
+              >
+                {remaining <= 0 ? 'Limite atingido' : `${remaining} caracteres restantes`}
+              </div>
+            ) : null}
+          </div>
 
           <Button
             type="submit"
             size="icon"
             disabled={!canSend}
-            className={cn('shrink-0 rounded-full', canSend ? 'bg-primary text-primary-foreground active:scale-95' : 'bg-muted text-muted-foreground')}
+            className={cn(
+              'size-11 shrink-0 rounded-full transition-transform',
+              canSend
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
+                : 'bg-muted text-muted-foreground',
+            )}
             aria-label="Enviar mensagem"
-            title="Enviar (Enter)"
           >
-            {sending ? <Icon name="loader" className="size-5 animate-spin" /> : <Icon name="send" className="size-5" />}
+            {sending ? <Spinner className="size-5" /> : <Icon name="send" className="size-5" />}
           </Button>
         </form>
+
+        {/* dica de teclado — só em dispositivos com teclado físico */}
+        <div className="text-muted-foreground/70 hidden items-center justify-end gap-1.5 px-3 pb-1.5 text-[11px] [@media(hover:hover)]:flex">
+          <kbd className="bg-muted rounded border px-1 font-sans">Enter</kbd> envia
+          <span aria-hidden="true">·</span>
+          <kbd className="bg-muted rounded border px-1 font-sans">Shift</kbd>+
+          <kbd className="bg-muted rounded border px-1 font-sans">Enter</kbd> nova linha
+        </div>
       </div>
 
       <div className="sr-only" role="status" aria-live="polite">
         {announce}
       </div>
 
-      {dragDepth > 0 ? (
-        <div className="bg-background/80 fixed inset-0 z-50 grid place-items-center p-6 backdrop-blur-sm">
-          <div className="border-ring bg-card flex items-center gap-3 rounded-2xl border-2 border-dashed px-8 py-6 text-base font-medium text-foreground">
-            <Icon name="upload" className="size-5" />
-            Larga aqui os ficheiros para enviar
-          </div>
-        </div>
-      ) : null}
+      {dragDepth > 0 ? <DropOverlay reduced={reduced} count={tasks.length} /> : null}
     </>
+  )
+}
+
+function DropOverlay({ reduced, count }: { reduced: boolean; count: number }) {
+  return (
+    <div className="bg-background/80 fixed inset-0 z-50 grid place-items-center p-6 backdrop-blur-sm">
+      <div
+        className={cn(
+          'border-primary bg-card flex flex-col items-center gap-3 rounded-3xl border-2 border-dashed px-10 py-10 text-center shadow-xl',
+          !reduced && 'animate-dialog-in',
+        )}
+      >
+        <span className="bg-primary/12 text-primary flex size-14 items-center justify-center rounded-2xl">
+          <Icon name="upload" className="size-7" />
+        </span>
+        <p className="text-base font-semibold">Larga aqui os ficheiros</p>
+        <p className="text-muted-foreground text-sm">
+          {count > 0 ? `Vão ser adicionados aos ${count} que já estão na fila.` : 'Vão entrar na fila de envio.'}
+        </p>
+      </div>
+    </div>
   )
 }

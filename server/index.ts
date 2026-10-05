@@ -65,9 +65,22 @@ sweepTimer.unref()
 let knownUrls: LanUrl[] = []
 let primary: LanUrl | null = null
 
+function emitIpc(): void {
+  if (process.env.LANSHARE_IPC !== '1') return
+  const payload = {
+    url: primary?.url ?? null,
+    pin,
+    port: config.port,
+    uploadDir: config.uploadDir,
+    interfaces: knownUrls.map((u) => ({ iface: u.iface, url: u.url })),
+  }
+  console.log(`LANSHARE_IPC ${JSON.stringify(payload)}`)
+}
+
 async function printAddresses(): Promise<void> {
   knownUrls = lanUrls(config.port)
   primary = preferPrimary(knownUrls)
+  emitIpc()
   if (knownUrls.length === 0) {
     app.log.warn('Sem interfaces de rede IPv4 visíveis. Liga-te em http://localhost:<porta>.')
     return
@@ -105,6 +118,7 @@ const rescanTimer = setInterval(async () => {
     const p = preferPrimary(now)
     if (p && p.url !== primary?.url) {
       primary = p
+      emitIpc()
       const qc = qrOf(p.url)
       if (qc) console.log(`\n${qc}\n`)
     }

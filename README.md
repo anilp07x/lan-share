@@ -28,6 +28,39 @@ http://192.168.x.x:3000                  ← um URL por interface + QR
 
 Nos telemóveis (mesma rede Wi‑Fi): abrir o URL, escrever o PIN, começar. Para instalar: opção **Adicionar ao ecrã principal** no Android/*Adicionar à App* no iOS.
 
+## App (painel + ícone na bandeja)
+
+Para quem não programa: `LAN Share` também corre como app de ambiente gráfico. Abre um painel com o **código QR**, o endereço e o PIN, e fica na bandeja do sistema com atalhos para abrir no navegador, abrir a pasta de ficheiros e sair.
+
+```bash
+npm install
+npm run build      # cliente
+npm run build:server
+npm run app        # arranca a app em modo de desenvolvimento
+```
+
+Para gerar os instaladores (em `release/`):
+
+```bash
+npm run app:dist   # LAN-Share-<versão>-instalador.exe + ...-portable.exe
+```
+
+O instalador cria atalhos no Menu Iniciar e no ambiente de trabalho e tem desinstalador; a versão *portable* não instala nada. Não é preciso ter Node instalado na máquina de quem instala.
+
+| Onde fica | Caminho |
+| --- | --- |
+| Ficheiros recebidos | `%APPDATA%\LAN Share\data\Ficheiros` (Windows) |
+| Índice de mensagens | `%APPDATA%\LAN Share\data\index.json` |
+| Definições da app | Electron gere-as em `%APPDATA%\LAN Share` |
+
+Detalhes que interessam:
+
+- A app escolhe uma porta livre a partir de `3000` (se estiver ocupada, tenta `3001`, `3002`…).
+- Fechar a janela **não** para o servidor; fecha-se pelo *Sair* do painel ou da bandeja.
+- **Iniciar com o Windows** arranca a app escondida, apenas na bandeja.
+- O PIN é gerado a cada arranque e só aparece no painel e no código QR.
+- O servidor corre dentro do executável da app (Node embebido), por isso não depende de uma instalação de Node.
+
 Para desenvolvimento:
 
 ```bash
@@ -36,7 +69,10 @@ npm run dev         # servidor com --watch (node 24 executa .ts direto)
 npm test            # 19 testes de integração
 npm run typecheck   # TS rigoroso (servidor + cliente)
 npm run icons       # regenera os ícones PWA
+npm run icons:app   # regenera build/icon.ico e build/tray.ico
 ```
+
+O servidor, quando arranca com `LANSHARE_IPC=1` (é o que a app faz), escreve na stdout uma linha `LANSHARE_IPC {json}` com o endereço, o PIN e as interfaces — é assim que o painel sabe o que mostrar.
 
 ## Configuração (variáveis de ambiente)
 

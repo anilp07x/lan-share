@@ -4,3 +4,8 @@ client/dist/
 data/
 *.log
 .env
+
+# App de ambiente gráfico (Electron)
+server-dist/
+release/
+build/

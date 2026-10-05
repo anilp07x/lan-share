@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src data:; style-src 'self'; script-src 'self'"
+    />
+    <title>LAN Share</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header>
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <path d="M8.6 10.6l6.8-3.9M8.6 13.4l6.8 3.9" />
+        </svg>
+      </span>
+      <div class="titles">
+        <h1>LAN Share</h1>
+        <p id="status" class="status" data-phase="starting">A arrancar…</p>
+      </div>
+    </header>
+
+    <section class="card qr-card">
+      <div id="qrFrame" class="qr-frame" hidden>
+        <img id="qr" alt="Código QR com o endereço da LAN Share" />
+      </div>
+      <p id="qrHint" class="hint">A preparar o código QR…</p>
+      <div class="row">
+        <code id="url" class="value">—</code>
+        <button id="copyUrl" class="ghost" type="button" title="Copiar endereço">Copiar</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <div>
+          <span class="label">PIN de acesso</span>
+          <code id="pin" class="value pin">••••••</code>
+        </div>
+        <div class="actions">
+          <button id="togglePin" class="ghost" type="button">Mostrar</button>
+          <button id="copyPin" class="ghost" type="button">Copiar</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Como entrar</h2>
+      <ol class="steps">
+        <li>Liga o telemóvel <strong>à mesma rede</strong> que este computador.</li>
+        <li>Abre a câmara e aponta para o código QR (ou escreve o endereço).</li>
+        <li>Escreve o PIN e toca em <strong>Entrar</strong>.</li>
+      </ol>
+    </section>
+
+    <section class="actions big">
+      <button id="openBrowser" class="primary" type="button">Abrir no computador</button>
+      <button id="openFolder" class="ghost" type="button">Pasta de ficheiros</button>
+    </section>
+
+    <section id="interfaces" class="card" hidden>
+      <h2>Outros endereços</h2>
+      <ul id="ifaceList" class="ifaces"></ul>
+    </section>
+
+    <footer>
+      <label class="check">
+        <input id="autostart" type="checkbox" />
+        <span>Iniciar com o Windows</span>
+      </label>
+      <div class="actions">
+        <button id="restart" class="ghost" type="button">Reiniciar servidor</button>
+        <button id="quit" class="ghost danger" type="button">Sair</button>
+      </div>
+    </footer>
+
+    <script src="panel.js"></script>
+  </body>
+</html>
