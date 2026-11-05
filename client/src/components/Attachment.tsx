@@ -16,6 +16,10 @@ function attachmentKind(mime: string): AttachmentKind {
   if (mime.startsWith('audio/')) return { label: 'Áudio', icon: 'audio' }
   if (mime === 'application/pdf') return { label: 'PDF', icon: 'file-text' }
   if (/zip|gzip|rar|7z|tar|x-7z|x-tar/.test(mime)) return { label: 'Arquivo', icon: 'archive' }
+  // Office antes do texto: os tipos OOXML têm "xml" no nome mas não são código
+  if (/spreadsheet|ms-excel/.test(mime)) return { label: 'Folha de cálculo', icon: 'file-text' }
+  if (/presentation|ms-powerpoint/.test(mime)) return { label: 'Apresentação', icon: 'file-text' }
+  if (/wordprocessing|msword|opendocument\.text/.test(mime)) return { label: 'Documento', icon: 'file-text' }
   if (mime.startsWith('text/') || /json|xml|javascript|typescript|csv/.test(mime)) {
     return { label: 'Documento', icon: 'code' }
   }
