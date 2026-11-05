@@ -75,8 +75,8 @@ interface OpenWs {
   wait: (pred: (f: WsFrame) => boolean, timeoutMs?: number) => Promise<WsFrame>
 }
 
-function openWs(srv: TestServer, cookie?: string): Promise<OpenWs> {
-  const url = srv.base.replace('http', 'ws') + '/ws'
+function openWs(srv: TestServer, cookie?: string, query = ''): Promise<OpenWs> {
+  const url = srv.base.replace('http', 'ws') + '/ws' + query
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(url, {
       headers: cookie ? [['cookie', cookie]] : undefined,
@@ -238,4 +238,91 @@ test('ws: broadcastFileExpired chega as ligações', async (t) => {
   srv.hub.broadcastFileExpired('file-que-expirou')
   const frame = await received
   if (frame.t === 'file-expired') assert.equal(frame.fileId, 'file-que-expirou')
+})
+const ANA = { id: 'ana-phone-01', name: 'Ana' }
+const RUI = { id: 'rui-phone-01', name: 'Rui' }
+const ZE = { id: 'ze-laptop-01', name: 'Zé' }
+const asQuery = (d: { id: string; name: string }) => `?id=${d.id}&name=${encodeURIComponent(d.name)}`
+
+async function postJson(srv: TestServer, payload: unknown): Promise<Response> {
+  return fetch(`${srv.base}/api/messages`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', cookie: srv.cookie },
+    body: JSON.stringify(payload),
+  })
+}
+
+test('ws: envio privado só chega ao remetente e ao destinatário', async (t) => {
+  const srv = await startServer()
+  t.after(() => srv.close())
+
+  const ana = await openWs(srv, srv.cookie, asQuery(ANA))
+  const rui = await openWs(srv, srv.cookie, asQuery(RUI))
+  const ze = await openWs(srv, srv.cookie, asQuery(ZE))
+  t.after(() => [ana, rui, ze].forEach((c) => c.ws.close()))
+  await ze.wait((f) => f.t === 'presence' && f.peers.length === 3)
+
+  const zeGotIt = ze.wait((f) => f.t === 'message', 400).then(
+    () => true,
+    () => false,
+  )
+  const res = await postJson(srv, { body: 'só para o Rui', from: ANA, to: [RUI.id] })
+  assert.equal(res.status, 201)
+  const sent = ((await res.json()) as { message: { to?: { id: string; name: string }[] } }).message
+  assert.deepEqual(sent.to, [RUI], 'guarda o nome atual do destinatário')
+
+  await rui.wait((f) => f.t === 'message')
+  await ana.wait((f) => f.t === 'message')
+  assert.equal(await zeGotIt, false, 'terceiro dispositivo não recebe')
+
+  // histórico: também filtrado por quem pede
+  const late = await openWs(srv, srv.cookie, asQuery(ZE))
+  t.after(() => late.ws.close())
+  const history = await late.wait((f) => f.t === 'history')
+  assert.equal(history.t === 'history' && history.messages.length, 0)
+  const anon = await fetch(`${srv.base}/api/history`, { headers: { cookie: srv.cookie } })
+  assert.equal(((await anon.json()) as { messages: unknown[] }).messages.length, 0)
+  const mine = await fetch(`${srv.base}/api/history?device=${RUI.id}`, { headers: { cookie: srv.cookie } })
+  assert.equal(((await mine.json()) as { messages: unknown[] }).messages.length, 1)
+})
+
+test('messages: privado sem remetente ou com ids inválidos é recusado', async (t) => {
+  const srv = await startServer()
+  t.after(() => srv.close())
+  assert.equal((await postJson(srv, { body: 'x', to: [RUI.id] })).status, 400)
+  assert.equal((await postJson(srv, { body: 'x', from: ANA, to: ['../etc'] })).status, 400)
+})
+
+test('messages: resposta guarda replyTo só se a mensagem existir', async (t) => {
+  const srv = await startServer()
+  t.after(() => srv.close())
+  const first = ((await (await postJson(srv, { body: 'pergunta', from: ANA })).json()) as { message: { id: string } }).message
+  const ok = (await (await postJson(srv, { body: 'resposta', from: RUI, replyTo: first.id })).json()) as {
+    message: { replyTo?: string }
+  }
+  assert.equal(ok.message.replyTo, first.id)
+  const gone = (await (await postJson(srv, { body: 'resposta', from: RUI, replyTo: 'm_naoexiste' })).json()) as {
+    message: { replyTo?: string }
+  }
+  assert.equal(gone.message.replyTo, undefined)
+})
+
+test('messages: só o remetente apaga, e todos recebem o aviso', async (t) => {
+  const srv = await startServer()
+  t.after(() => srv.close())
+  const viewer = await openWs(srv, srv.cookie)
+  t.after(() => viewer.ws.close())
+
+  const { message } = (await (await postJson(srv, { body: 'apagar-me', from: ANA })).json()) as { message: { id: string } }
+  const del = (senderId: string) =>
+    fetch(`${srv.base}/api/messages/${message.id}`, {
+      method: 'DELETE',
+      headers: { cookie: srv.cookie, 'x-sender-id': senderId },
+    })
+
+  assert.equal((await del(RUI.id)).status, 403)
+  assert.equal((await del(ANA.id)).status, 200)
+  const frame = await viewer.wait((f) => f.t === 'deleted')
+  assert.equal(frame.t === 'deleted' && frame.id, message.id)
+  assert.equal((await del(ANA.id)).status, 404)
 })

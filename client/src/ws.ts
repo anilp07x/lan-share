@@ -1,4 +1,4 @@
-import type { WsFrame } from './types.ts'
+import type { Sender, WsFrame } from './types.ts'
 
 export type WsStatus = 'connecting' | 'open' | 'reconnecting'
 
@@ -16,6 +16,8 @@ export class WsClient {
   status: WsStatus = 'connecting'
   onStatus: ((s: WsStatus) => void) | null = null
   onFrame: ((f: WsFrame) => void) | null = null
+  /** Identidade anunciada ao servidor (lista de presença). */
+  identity: Sender | null = null
 
   start(): void {
     this.stopped = false
@@ -41,12 +43,16 @@ export class WsClient {
     if (this.stopped) return
     this.setStatus('connecting')
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
-    const ws = new WebSocket(`${protocol}://${location.host}/ws`)
+    // a identidade vai no URL para o histórico já incluir os envios privados
+    const id = this.identity
+    const query = id ? `?id=${encodeURIComponent(id.id)}&name=${encodeURIComponent(id.name)}` : ''
+    const ws = new WebSocket(`${protocol}://${location.host}/ws${query}`)
     this.ws = ws
 
     ws.onopen = () => {
       this.backoff = BASE_BACKOFF_MS
       this.setStatus('open')
+      this.hello()
     }
     ws.onmessage = (ev: MessageEvent) => {
       try {
@@ -62,6 +68,17 @@ export class WsClient {
     }
     ws.onerror = () => {
       ws.close()
+    }
+  }
+
+  /** Anuncia (ou volta a anunciar, após mudar de nome) este dispositivo. */
+  hello(identity: Sender | null = this.identity): void {
+    this.identity = identity
+    if (!identity || this.ws?.readyState !== WebSocket.OPEN) return
+    try {
+      this.ws.send(JSON.stringify({ t: 'hello', id: identity.id, name: identity.name }))
+    } catch {
+      /* o reconnect volta a anunciar */
     }
   }
 

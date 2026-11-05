@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T19:15:00Z",
+  "title": "Design System: LAN Share",
+  "extensions": {
+    "colorMeta": {
+      "shell": { "role": "secondary", "displayName": "Casco esmalte", "canonical": "#16302a" },
+      "signal": { "role": "primary", "displayName": "Sinal âmbar", "canonical": "#ff8a1f" },
+      "signal-ink": { "role": "primary", "displayName": "Tinta âmbar", "canonical": "#a84a00" },
+      "concrete": { "role": "neutral", "displayName": "Betão", "canonical": "#e9ece7" },
+      "brass": { "role": "tertiary", "displayName": "Latão", "canonical": "#8f6c3a" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display condensado", "purpose": "Marca, títulos de diálogo e estados vazios (font-stretch 72%)." },
+      "tag": { "displayName": "Guia", "purpose": "Guias de cápsula, separadores, contagens (font-stretch 70%, maiúsculas)." },
+      "body": { "displayName": "Corpo", "purpose": "Conteúdo das cápsulas e texto corrido." }
+    },
+    "shadows": [
+      { "name": "composer", "value": "0 8px 24px -16px rgb(0 0 0 / 0.35)", "purpose": "Compositor assente sobre o feed." },
+      { "name": "floating", "value": "0 12px 32px -12px rgb(0 0 0 / 0.5)", "purpose": "Toasts e botão de envios novos." },
+      { "name": "dialog", "value": "0 24px 60px -20px rgb(0 0 0 / 0.45)", "purpose": "Diálogos e folhas inferiores." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Todas as entradas e a assinatura de envio." },
+      { "name": "capsule-out", "value": "0.5s ease-out-expo", "purpose": "A minha cápsula sobe pelo tubo." },
+      { "name": "capsule-in", "value": "0.38s ease-out-expo + tag-flash 1.6s", "purpose": "Cápsula alheia chega; guia pisca em âmbar." },
+      { "name": "launch", "value": "0.55s ease-out-expo", "purpose": "Ícone de enviar dispara e volta." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal (Entrar, Guardar nome, envios novos).",
+      "html": "<button class=\"ds-btn-primary\">Entrar</button>",
+      "css": ".ds-btn-primary { background: var(--primary, #ff8a1f); color: var(--primary-foreground, #1d0e00); height: 44px; padding: 0 16px; border: 0; border-radius: 14px; font: 500 15px 'Archivo Variable', system-ui, sans-serif; transition: background-color .2s, transform .2s; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary, #ff8a1f) 88%, transparent); } .ds-btn-primary:active { transform: scale(.97); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, #c25a00); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chips",
+      "kind": "chip",
+      "refersTo": "filter-chip-active",
+      "description": "Filtros do feed com contagem tabular.",
+      "html": "<div class=\"ds-filters\"><button class=\"ds-chip ds-chip-on\">Tudo <span>8</span></button><button class=\"ds-chip\">Texto <span>5</span></button><button class=\"ds-chip\">Ficheiros <span>2</span></button></div>",
+      "css": ".ds-filters { display: flex; gap: 4px; } .ds-chip { height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted-foreground, #51605a); font: 600 13px 'Archivo Variable', system-ui, sans-serif; font-stretch: 70%; text-transform: uppercase; letter-spacing: .045em; font-variant-numeric: tabular-nums; } .ds-chip span { opacity: .7; } .ds-chip:hover { background: var(--accent, #d6dbd3); color: var(--foreground, #13201b); } .ds-chip-on { background: var(--foreground, #13201b); color: var(--background, #e9ece7); }"
+    },
+    {
+      "name": "Capsule",
+      "kind": "card",
+      "refersTo": "capsule-tag-other",
+      "description": "Cápsula de envio: guia de expedição picotada + conteúdo.",
+      "html": "<article class=\"ds-capsule\"><header class=\"ds-capsule-tag\"><i></i><span>iPhone da Ana</span><time>19:08</time></header><p>Manda-me o link da reunião, por favor</p></article>",
+      "css": ".ds-capsule { max-width: 34rem; border: 1px solid var(--border, #13201b1f); border-radius: 16px; background: var(--card, #fafbf8); overflow: hidden; font-family: 'Archivo Variable', system-ui, sans-serif; } .ds-capsule-tag { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px; background: var(--muted, #dfe3dc); background-image: linear-gradient(to right, var(--perforation, #13201b33) 50%, transparent 50%); background-size: 6px 1px; background-repeat: repeat-x; background-position: bottom; color: var(--muted-foreground, #51605a); font-size: 12px; font-weight: 600; font-stretch: 70%; text-transform: uppercase; letter-spacing: .045em; } .ds-capsule-tag i { width: 8px; height: 8px; border-radius: 50%; background: #8a5aa8; } .ds-capsule-tag span { flex: 1; } .ds-capsule p { margin: 0; padding: 10px 14px 12px; font-size: 16.5px; line-height: 1.625; color: var(--foreground, #13201b); }"
+    },
+    {
+      "name": "Mine Capsule Tag",
+      "kind": "custom",
+      "refersTo": "capsule-tag-mine",
+      "description": "Guia âmbar das cápsulas enviadas por este dispositivo.",
+      "html": "<header class=\"ds-tag-mine\"><i></i><span>PC do escritório · eu</span><time>19:10</time></header>",
+      "css": ".ds-tag-mine { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px; border: 1px solid color-mix(in srgb, var(--primary, #ff8a1f) 45%, transparent); border-radius: 16px 16px 0 0; background: var(--signal-wash, #ffe7cf); color: var(--signal-ink, #a84a00); font: 600 12px 'Archivo Variable', system-ui, sans-serif; font-stretch: 70%; text-transform: uppercase; letter-spacing: .045em; } .ds-tag-mine i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary, #ff8a1f); } .ds-tag-mine span { flex: 1; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "button-outline",
+      "description": "Pesquisa em pílula na barra de filtros.",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg><input placeholder=\"Pesquisar texto, ficheiro, remetente\"></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 8px; height: 40px; width: 224px; padding: 0 12px; border: 1px solid var(--input, #13201b2e); border-radius: 999px; background: var(--card, #fafbf8); color: var(--muted-foreground, #51605a); } .ds-search:focus-within { border-color: var(--ring, #c25a00); } .ds-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: 15px 'Archivo Variable', system-ui, sans-serif; color: var(--foreground, #13201b); }"
+    },
+    {
+      "name": "Shell Rail",
+      "kind": "nav",
+      "refersTo": "rail",
+      "description": "Rail desktop em esmalte verde-tubo com estações ligadas.",
+      "html": "<aside class=\"ds-rail\"><strong>LAN Share</strong><small>ESTAÇÕES LIGADAS · 2</small><ul><li><i class=\"me\"></i>PC do escritório</li><li><i></i>Telemóvel do Rui</li></ul><button>Ligar outro dispositivo</button></aside>",
+      "css": ".ds-rail { display: flex; flex-direction: column; gap: 12px; width: 288px; padding: 24px 20px; background: var(--shell, #16302a); color: var(--shell-foreground, #eef3ee); font-family: 'Archivo Variable', system-ui, sans-serif; } .ds-rail strong { font-size: 26px; font-weight: 800; font-stretch: 72%; } .ds-rail small { color: var(--shell-muted, #a3b8af); font-size: 12px; font-weight: 600; font-stretch: 70%; letter-spacing: .045em; } .ds-rail ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; } .ds-rail li { display: flex; align-items: center; gap: 10px; } .ds-rail i { width: 10px; height: 10px; border-radius: 50%; background: #3d6fb0; } .ds-rail i.me { background: var(--primary, #ff8a1f); } .ds-rail button { height: 44px; border: 0; border-radius: 14px; background: var(--shell-raised, #1f3d36); color: inherit; font: 500 14px inherit; text-align: left; padding: 0 14px; } .ds-rail button:hover { background: var(--shell-line, #ffffff1c); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Correio pneumático na rede local",
+    "overview": "Cada envio é uma cápsula com guia de expedição: remetente, hora e prazo carimbados. O casco verde-tubo enquadra; o chão de betão deixa as cápsulas lerem-se; o âmbar marca o que é acionável e o que é meu.",
+    "keyCharacteristics": [
+      "Casco esmalte verde-tubo no rail, cabeçalho e login",
+      "Guias condensadas em maiúsculas com linha picotada",
+      "Âmbar reservado para ações e para 'eu'",
+      "Uma só família variável (Archivo) em duas larguras"
+    ],
+    "rules": [
+      { "name": "Âmbar é meu e acionável", "body": "Âmbar só em ações primárias, nas minhas cápsulas e em novidades.", "section": "colors" },
+      { "name": "Verde-tubo é estrutura", "body": "O casco enquadra; nunca leva conteúdo do feed.", "section": "colors" },
+      { "name": "A guia diz tudo", "body": "Remetente e hora vivem na guia condensada de cada cápsula.", "section": "typography" }
+    ],
+    "dos": [
+      "Do mostrar remetente e hora em todas as cápsulas",
+      "Do mostrar a expiração dos ficheiros",
+      "Do manter fontes e bibliotecas no bundle"
+    ],
+    "donts": [
+      "Don't usar âmbar como decoração",
+      "Don't pôr bordas laterais coloridas nas cápsulas",
+      "Don't animar o histórico ao abrir"
+    ]
+  }
+}

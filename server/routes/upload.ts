@@ -7,7 +7,7 @@ import type { FastifyInstance } from 'fastify'
 import type { Store } from '../lib/store.ts'
 import type { WsHub } from '../ws/hub.ts'
 import { freeBytes, removeQuiet, renameRetry } from '../lib/disk.ts'
-import { safeMimeType, sanitizeDisplayName } from '../lib/sanitize.ts'
+import { safeMimeType, sanitizeDisplayName, sanitizeRecipients, sanitizeSender } from '../lib/sanitize.ts'
 import { makeError } from '../types.ts'
 
 export interface UploadDeps {
@@ -20,6 +20,16 @@ export interface UploadDeps {
 }
 
 const MB = 1024 * 1024
+
+/** Os cabeçalhos HTTP só levam ASCII: o cliente envia o nome em percent-encoding. */
+function decodeHeader(value: string | string[] | undefined): string | undefined {
+  if (typeof value !== 'string') return undefined
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return undefined
+  }
+}
 
 export async function uploadRoutes(app: FastifyInstance, deps: UploadDeps): Promise<void> {
   const { store, hub, uploadDir, tmpDir } = deps
@@ -36,6 +46,12 @@ export async function uploadRoutes(app: FastifyInstance, deps: UploadDeps): Prom
 
     const name = sanitizeDisplayName(typeof data.filename === 'string' ? data.filename : 'ficheiro')
     const mime = safeMimeType(data.mimetype)
+    const from = sanitizeSender(req.headers['x-sender-id'], decodeHeader(req.headers['x-sender-name']))
+    const to = sanitizeRecipients(req.headers['x-recipients'], hub.nameOf)
+    if (to === null || (to && !from)) {
+      data.file.resume()
+      return reply.code(400).send(makeError('BAD_INPUT', 'Destinatários inválidos.'))
+    }
 
     // Pré-verificação de espaço (o Content-Length inclui todo o corpo multipart).
     const contentLength = Number(req.headers['content-length'] ?? 0)
@@ -59,10 +75,10 @@ export async function uploadRoutes(app: FastifyInstance, deps: UploadDeps): Prom
 
       await renameRetry(tmpFile, finalFile)
       const size = (await fsp.stat(finalFile)).size
-      const message = store.addFile(Date.now(), { fileId, name, size, mime })
+      const message = store.addFile(Date.now(), { fileId, name, size, mime }, from, to)
       await store.save()
       committed = true
-      hub.broadcast({ t: 'message', message })
+      hub.broadcastMessage(message)
       return reply.code(201).send({ message })
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code

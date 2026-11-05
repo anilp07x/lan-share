@@ -87,7 +87,7 @@ function useLock(open: boolean) {
 }
 
 function DialogOverlay({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-overlay" className={cn('absolute inset-0 bg-black/60 backdrop-blur-sm', className)} aria-hidden="true" {...props} />
+  return <div data-slot="dialog-overlay" className={cn('absolute inset-0 bg-[#06100d]/70 backdrop-blur-[3px]', className)} aria-hidden="true" {...props} />
 }
 
 function DialogContent({ className, children, ...props }: React.ComponentProps<'div'>) {
@@ -129,7 +129,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<'
   if (!ctx.open) return null
 
   return createPortal(
-    <div data-slot="dialog-root" className="fixed inset-0 z-50 grid place-items-center p-4">
+    <div data-slot="dialog-root" className="fixed inset-0 z-50 grid items-end justify-items-center p-2 sm:place-items-center sm:p-4">
       <DialogOverlay />
       <div
         ref={ref}
@@ -139,7 +139,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<'
         aria-labelledby={ctx.titleId}
         tabIndex={-1}
         className={cn(
-          'bg-background text-foreground relative z-10 max-h-[86dvh] w-full max-w-lg overflow-y-auto rounded-xl border border-border p-6 focus:outline-none',
+          'bg-popover text-popover-foreground relative z-10 max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border p-6 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.45)] focus:outline-none',
           !reduced && 'animate-dialog-in',
           className,
         )}
@@ -151,7 +151,7 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<'
             type="button"
             onClick={() => ctx.onOpenChange(false)}
             aria-label="Fechar"
-            className="text-muted-foreground absolute top-4 right-4 flex size-8 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="bg-popover/90 text-muted-foreground absolute top-3 right-3 z-10 flex size-10 items-center justify-center rounded-full transition-colors hover:bg-accent hover:text-foreground"
           >
             <Icon name="x" className="size-4" />
           </button>
@@ -182,7 +182,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<'h2'>) {
     <h2
       id={ctx.titleId}
       data-slot="dialog-title"
-      className={cn('text-lg leading-none font-semibold', className)}
+      className={cn('display pr-10 text-[26px]', className)}
       {...props}
     />
   )
@@ -190,7 +190,7 @@ function DialogTitle({ className, ...props }: React.ComponentProps<'h2'>) {
 
 function DialogDescription({ className, ...props }: React.ComponentProps<'div'>) {
   return (
-    <div data-slot="dialog-description" className={cn('text-muted-foreground text-sm', className)} {...props} />
+    <div data-slot="dialog-description" className={cn('text-muted-foreground text-[15px] text-pretty', className)} {...props} />
   )
 }
 

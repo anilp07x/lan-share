@@ -1,7 +1,7 @@
 import { promises as fsp } from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import type { FileMessage, FileMeta, Message, TextMessage } from '../types.ts'
+import type { FileMessage, FileMeta, Message, Sender, TextMessage } from '../types.ts'
 import { renameRetry } from './disk.ts'
 
 export class IndexCorruptError extends Error {
@@ -30,10 +30,20 @@ function isFileMeta(value: unknown): value is FileMeta {
   return validId && validName && validSize && validMime
 }
 
+function isValidSender(value: unknown): boolean {
+  if (value === undefined) return true
+  if (typeof value !== 'object' || value === null) return false
+  const v = value as Record<string, unknown>
+  return typeof v.id === 'string' && typeof v.name === 'string'
+}
+
 function isValidMessage(value: unknown): value is Message {
   if (typeof value !== 'object' || value === null) return false
   const v = value as Record<string, unknown>
   if (typeof v.id !== 'string' || v.id.length === 0) return false
+  if (!isValidSender(v.from)) return false
+  if (v.to !== undefined && !(Array.isArray(v.to) && v.to.every(isValidSender))) return false
+  if (v.replyTo !== undefined && typeof v.replyTo !== 'string') return false
   if (typeof v.ts !== 'number' || !Number.isFinite(v.ts)) return false
   if (v.kind === 'text') {
     return v.body === undefined || typeof v.body === 'string' || v.body === null
@@ -42,6 +52,18 @@ function isValidMessage(value: unknown): value is Message {
     return isFileMeta(v.file)
   }
   return false
+}
+
+/** Um envio privado só é visível para o remetente e os destinatários. */
+export function visibleTo(message: Message, viewerId: string | undefined): boolean {
+  if (!message.to) return true
+  if (!viewerId) return false
+  return message.from?.id === viewerId || message.to.some((r) => r.id === viewerId)
+}
+
+export interface TextExtras {
+  to?: Sender[]
+  replyTo?: string
 }
 
 /** Índice de metadados em memória com persistência atómica em JSON (data/index.json). */
@@ -58,8 +80,13 @@ export class Store {
     return this.messages.length
   }
 
-  recentMessages(limit: number): Message[] {
-    return this.messages.slice(-limit)
+  /** Últimas `limit` mensagens que este dispositivo pode ver. */
+  recentMessages(limit: number, viewerId?: string): Message[] {
+    return this.messages.filter((m) => visibleTo(m, viewerId)).slice(-limit)
+  }
+
+  get(id: string): Message | undefined {
+    return this.messages.find((m) => m.id === id)
   }
 
   getFile(fileId: string): FileMessage | undefined {
@@ -70,14 +97,29 @@ export class Store {
     return this.messages.filter((m): m is FileMessage => m.kind === 'file')
   }
 
-  addText(ts: number, body: string): TextMessage {
-    const message: TextMessage = { id: newMessageId(), ts, kind: 'text', body }
+  addText(ts: number, body: string, from?: Sender, extras: TextExtras = {}): TextMessage {
+    const message: TextMessage = {
+      id: newMessageId(),
+      ts,
+      kind: 'text',
+      body,
+      ...(from ? { from } : {}),
+      ...(extras.to ? { to: extras.to } : {}),
+      ...(extras.replyTo ? { replyTo: extras.replyTo } : {}),
+    }
     this.messages.push(message)
     return message
   }
 
-  addFile(ts: number, file: FileMeta): FileMessage {
-    const message: FileMessage = { id: newMessageId(), ts, kind: 'file', file }
+  addFile(ts: number, file: FileMeta, from?: Sender, to?: Sender[]): FileMessage {
+    const message: FileMessage = {
+      id: newMessageId(),
+      ts,
+      kind: 'file',
+      file,
+      ...(from ? { from } : {}),
+      ...(to ? { to } : {}),
+    }
     this.messages.push(message)
     this.fileById.set(file.fileId, message)
     return message

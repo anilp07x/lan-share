@@ -20,6 +20,7 @@ import { historyRoutes } from './routes/history.ts'
 import { uploadRoutes } from './routes/upload.ts'
 import { filesRoutes } from './routes/files.ts'
 import { wsRoutes } from './routes/ws.ts'
+import { lanUrls, preferPrimary } from './lib/net.ts'
 
 const serverDir = path.dirname(fileURLToPath(import.meta.url))
 const clientDistDir = path.resolve(serverDir, '../client/dist')
@@ -101,7 +102,8 @@ export async function buildApp(deps: BuildDeps): Promise<BuiltApp> {
       directives: {
         'default-src': ["'self'"],
         'script-src': ["'self'"],
-        'style-src': ["'self'"],
+        // hash do <style> vazio que o input-otp (campo do PIN) injeta; só esse elemento passa
+        'style-src': ["'self'", "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"],
         'img-src': ["'self'", 'data:', 'blob:'],
         'font-src': ["'self'"],
         'connect-src': ["'self'", 'ws:', 'wss:'],
@@ -129,7 +131,7 @@ export async function buildApp(deps: BuildDeps): Promise<BuiltApp> {
     },
   })
 
-  // maxPayload pequeno: o cliente nunca envia dados (só frames de controlo).
+  // maxPayload pequeno: o cliente só envia o frame 'hello' (id + nome do dispositivo).
   await app.register(fastifyWebsocket, { options: { maxPayload: 1024 } })
 
   const hasDist = fs.existsSync(path.join(clientDistDir, 'index.html'))
@@ -159,7 +161,7 @@ export async function buildApp(deps: BuildDeps): Promise<BuiltApp> {
   })
 
   await authRoutes(app, { config, pin: deps.pin, sessions })
-  await messageRoutes(app, { store, maxTextLen: config.maxTextLen, hub })
+  await messageRoutes(app, { store, maxTextLen: config.maxTextLen, hub, uploadDir: config.uploadDir })
   await historyRoutes(app, { store, historyLimit: config.historyLimit })
   await uploadRoutes(app, {
     store,
@@ -173,6 +175,17 @@ export async function buildApp(deps: BuildDeps): Promise<BuiltApp> {
   await wsRoutes(app, { store, hub, historyLimit: config.historyLimit })
 
   app.get('/api/health', async () => ({ ok: true, maxFileMb: storeForLog.mb }))
+
+  // Endereços LAN (para o QR na app) e limites que o cliente mostra.
+  app.get('/api/info', async () => {
+    const urls = lanUrls(config.port)
+    return {
+      primaryUrl: preferPrimary(urls)?.url ?? null,
+      urls: urls.map((u) => u.url),
+      retentionMs: config.retentionMs,
+      maxFileMb: storeForLog.mb,
+    }
+  })
 
   // Normaliza todos os erros no formato {error:{code,message}}.
   app.setErrorHandler((err: CodedError, req, reply) => {

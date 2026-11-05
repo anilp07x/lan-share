@@ -50,14 +50,14 @@ export function Toaster() {
     <div
       role="region"
       aria-label="Avisos"
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 px-4"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(7rem+env(safe-area-inset-bottom))] md:left-72 z-50 flex flex-col items-center gap-2 px-4"
     >
       {items.map((t) => (
         <div
           key={t.id}
           role={t.tone === 'error' ? 'alert' : 'status'}
           className={cn(
-            'bg-card text-foreground pointer-events-auto flex max-w-sm items-center gap-2 rounded-xl border border-border px-3.5 py-2.5 text-sm',
+            'bg-shell text-shell-foreground pointer-events-auto flex max-w-sm items-center gap-2.5 rounded-xl px-4 py-3 text-sm shadow-[0_12px_32px_-12px_rgb(0_0_0/0.5)]',
             !reduced && 'animate-toast-in',
           )}
         >

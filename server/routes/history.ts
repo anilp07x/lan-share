@@ -8,12 +8,12 @@ export interface HistoryDeps {
 
 export async function historyRoutes(app: FastifyInstance, deps: HistoryDeps): Promise<void> {
   app.get('/api/history', async (req, reply) => {
-    const query = req.query as { limit?: string }
+    const query = req.query as { limit?: string; device?: string }
     let limit = deps.historyLimit
     if (query.limit !== undefined) {
       const n = Number(query.limit)
       if (Number.isInteger(n) && n >= 1 && n <= 2000) limit = n
     }
-    return reply.send({ messages: deps.store.recentMessages(limit) })
+    return reply.send({ messages: deps.store.recentMessages(limit, query.device) })
   })
 }

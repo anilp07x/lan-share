@@ -1,65 +1,88 @@
 @import "tailwindcss";
+@import "@fontsource-variable/archivo/wdth.css";
 
-/* dark: usa preferência do sistema (media query) — modos claro/escuro automáticos */
+/*
+ * Correio pneumático: casco esmalte verde-tubo, chão de betão, sinal âmbar.
+ * Claro/escuro seguem o sistema (media query).
+ */
 
 :root {
   color-scheme: light dark;
-  /* ── tokens — claro (base) ─────────────────────────────────────── */
-  --background: #fbfbfd;
-  --foreground: #1d1d1f;
-  --card: #ffffff;
-  --card-foreground: #1d1d1f;
-  --popover: #ffffff;
-  --popover-foreground: #1d1d1f;
-  --primary: #0071e3;
-  --primary-foreground: #ffffff;
-  --secondary: #f2f2f7;
-  --secondary-foreground: #1d1d1f;
-  --muted: #f5f5f7;
-  --muted-foreground: #6e6e73;
-  --accent: #e8e8ed;
-  --accent-foreground: #1d1d1f;
-  --destructive: #d70015;
+  /* ── chão e superfícies ─────────────────────────────────────────── */
+  --background: #e9ece7;
+  --foreground: #13201b;
+  --card: #fafbf8;
+  --card-foreground: #13201b;
+  --popover: #fafbf8;
+  --popover-foreground: #13201b;
+  --muted: #dfe3dc;
+  --muted-foreground: #51605a;
+  --secondary: #dfe3dc;
+  --secondary-foreground: #13201b;
+  --accent: #d6dbd3;
+  --accent-foreground: #13201b;
+  /* ── sinal âmbar (enviar, novidades, o que é meu) ──────────────── */
+  --primary: #ff8a1f;
+  --primary-foreground: #1d0e00;
+  --signal-ink: #a84a00;
+  --signal-wash: #ffe7cf;
+  /* ── casco esmalte (rail, cabeçalho, login) ────────────────────── */
+  --shell: #16302a;
+  --shell-raised: #1f3d36;
+  --shell-foreground: #eef3ee;
+  --shell-muted: #a3b8af;
+  --shell-line: #ffffff1c;
+  --brass: #8f6c3a;
+  /* ── estado ────────────────────────────────────────────────────── */
+  --destructive: #c4161c;
   --destructive-foreground: #ffffff;
-  --success: #1a7f3c;
-  --warning: #a05f00;
-  --border: #00000014;
-  --input: #0000001f;
-  --ring: #0071e3;
-  --radius: 0.75rem;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --success: #17803d;
+  --warning: #9a5b00;
+  --border: #13201b1f;
+  --perforation: #13201b33;
+  --input: #13201b2e;
+  --ring: #c25a00;
+  --radius: 0.875rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    /* ── tokens — escuro ─────────────────────────────────────────── */
-    --background: #000000;
-    --foreground: #f5f5f7;
-    --card: #1c1c1e;
-    --card-foreground: #f5f5f7;
-    --popover: #1c1c1e;
-    --popover-foreground: #f5f5f7;
-    --primary: #2997ff;
-    --primary-foreground: #000000;
-    --secondary: #2c2c2e;
-    --secondary-foreground: #f5f5f7;
-    --muted: #1c1c1e;
-    --muted-foreground: #98989d;
-    --accent: #2c2c2e;
-    --accent-foreground: #f5f5f7;
-    --destructive: #ff453a;
-    --destructive-foreground: #000000;
-    --success: #30d158;
-    --warning: #ff9f0a;
-    --border: #ffffff14;
-    --input: #ffffff1f;
-    --ring: #2997ff;
+    --background: #0a1210;
+    --foreground: #e4ebe6;
+    --card: #121e1a;
+    --card-foreground: #e4ebe6;
+    --popover: #142320;
+    --popover-foreground: #e4ebe6;
+    --muted: #192824;
+    --muted-foreground: #95a59e;
+    --secondary: #192824;
+    --secondary-foreground: #e4ebe6;
+    --accent: #20322d;
+    --accent-foreground: #e4ebe6;
+    --primary: #ff9a3c;
+    --primary-foreground: #1d0e00;
+    --signal-ink: #ffab5e;
+    --signal-wash: #3a2410;
+    --shell: #0f1d19;
+    --shell-raised: #182b26;
+    --shell-foreground: #e4ebe6;
+    --shell-muted: #8fa59b;
+    --shell-line: #ffffff14;
+    --brass: #c49a5c;
+    --destructive: #ff5a52;
+    --destructive-foreground: #1a0000;
+    --success: #3ccf6e;
+    --warning: #ffad33;
+    --border: #ffffff17;
+    --perforation: #ffffff2a;
+    --input: #ffffff24;
+    --ring: #ff9a3c;
   }
 }
 
 @theme inline {
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Archivo Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -68,35 +91,57 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-signal-ink: var(--signal-ink);
+  --color-signal-wash: var(--signal-wash);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-shell: var(--shell);
+  --color-shell-raised: var(--shell-raised);
+  --color-shell-foreground: var(--shell-foreground);
+  --color-shell-muted: var(--shell-muted);
+  --color-shell-line: var(--shell-line);
+  --color-brass: var(--brass);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-border: var(--border);
+  --color-perforation: var(--perforation);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring/60;
   }
   html {
     -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    font-family: var(--font-sans);
+    font-stretch: 100%;
+    caret-color: var(--primary);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 32%, transparent);
+  }
+  time {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
   #root {
     min-height: 100dvh;
@@ -112,7 +157,32 @@
   }
 }
 
-/* caret do InputOTP — define a animação usada pelo componente shadcn */
+/* Guia de expedição: maiúsculas condensadas (largura 70%). */
+@utility tag {
+  font-stretch: 70%;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Títulos de marca: condensados e pesados. */
+@utility display {
+  font-stretch: 72%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+}
+
+/* Linha picotada entre guia e conteúdo da cápsula. */
+@utility perforated {
+  background-image: linear-gradient(to right, var(--perforation) 50%, transparent 50%);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
+
+/* caret do InputOTP */
 @keyframes caret-blink {
   0%,
   70%,
@@ -129,10 +199,10 @@
   animation: caret-blink 1s ease-out infinite;
 }
 
-/* ── scrollbars discretas (mantêm o overscroll a tocar bem) ─────────── */
+/* ── scrollbars discretas ───────────────────────────────────────────── */
 .feed-scroll {
   scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  scrollbar-color: var(--perforation) transparent;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -141,27 +211,33 @@
   width: 8px;
 }
 .feed-scroll::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: var(--perforation);
   border-radius: 8px;
 }
 .feed-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* luz morta no hover do cartão de anexo (sem sombra pesada, minimal) */
-.attachment-card {
-  transition: border-color 0.2s ease;
-}
-.attachment-card:hover {
-  border-color: color-mix(in srgb, var(--ring) 40%, var(--border));
-}
+/* ── movimento: a cápsula sobe pelo tubo (envio) ou cai do tubo (chegada) ── */
 
-/* ── animações próprias (transform/opacity, desligadas com reduced-motion) ── */
-
-@keyframes reveal {
+@keyframes capsule-out {
   from {
     opacity: 0;
-    transform: translateY(var(--reveal-y, 6px));
+    transform: translateY(28px) scaleY(0.94);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes capsule-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
   }
   to {
     opacity: 1;
@@ -169,14 +245,38 @@
   }
 }
 
+@keyframes tag-flash {
+  from {
+    background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+}
+
+@keyframes launch {
+  0% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-140%);
+    opacity: 0;
+  }
+  46% {
+    transform: translateY(140%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -193,15 +293,6 @@
   }
 }
 
-@keyframes float {
-  from {
-    transform: translateY(-6px);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -214,11 +305,11 @@
 @keyframes dialog-in {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -233,36 +324,64 @@
   }
 }
 
-@utility animate-reveal {
-  animation: reveal 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+@keyframes pulse-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@utility animate-capsule-out {
+  animation: capsule-out 0.5s var(--ease-out-expo) backwards;
+}
+@utility animate-capsule-in {
+  animation: capsule-in 0.38s var(--ease-out-expo) backwards;
+  & [data-tag] {
+    animation: tag-flash 1.6s ease-out;
+  }
+}
+/* saltar para a mensagem citada: a guia pisca como numa chegada (sem deslocamento) */
+.jump-flash [data-tag] {
+  animation: tag-flash 1.6s ease-out;
+}
+@utility animate-launch {
+  animation: launch 0.55s var(--ease-out-expo);
 }
 @utility animate-rise-in {
-  animation: rise-in 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+  animation: rise-in 0.6s var(--ease-out-expo) backwards;
 }
 @utility animate-shake {
   animation: shake 0.35s ease-in-out;
-}
-@utility animate-float {
-  animation: float 1.8s ease-in-out infinite alternate;
 }
 @utility animate-fade-in {
   animation: fade-in 0.2s ease-out backwards;
 }
 @utility animate-dialog-in {
-  animation: dialog-in 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+  animation: dialog-in 0.32s var(--ease-out-expo) backwards;
 }
 @utility animate-toast-in {
-  animation: toast-in 0.18s ease-out backwards;
+  animation: toast-in 0.25s var(--ease-out-expo) backwards;
+}
+@utility animate-pulse-dot {
+  animation: pulse-dot 2.4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-reveal,
+  .animate-capsule-out,
+  .animate-capsule-in,
+  .animate-launch,
   .animate-rise-in,
   .animate-shake,
-  .animate-float,
-  .animate-fade-in,
   .animate-dialog-in,
-  .animate-toast-in {
+  .animate-toast-in,
+  .animate-pulse-dot {
     animation: none;
+  }
+  /* mantém o sinal de chegada sem deslocamento */
+  .animate-capsule-in [data-tag] {
+    animation: tag-flash 1.6s ease-out;
   }
 }

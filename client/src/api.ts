@@ -1,4 +1,4 @@
-import type { Message } from './types.ts'
+import type { Message, Sender, ServerInfo } from './types.ts'
 
 export class AuthError extends Error {}
 export class HttpError extends Error {
@@ -64,16 +64,38 @@ export function logout(): Promise<{ ok: true }> {
 
 // ── mensagens ─────────────────────────────────────────────────────────
 
-export function fetchHistory(): Promise<{ messages: Message[] }> {
-  return request<{ messages: Message[] }>('/api/history')
+export function fetchHistory(deviceId: string): Promise<{ messages: Message[] }> {
+  return request<{ messages: Message[] }>(`/api/history?device=${encodeURIComponent(deviceId)}`)
 }
 
-export function postMessage(body: string): Promise<{ message: Message }> {
+export interface SendOptions {
+  /** Ids dos destinatários; vazio = todos. */
+  to?: string[]
+  replyTo?: string
+}
+
+export function postMessage(body: string, from: Sender, options: SendOptions = {}): Promise<{ message: Message }> {
   return request<{ message: Message }>('/api/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ body }),
+    body: JSON.stringify({
+      body,
+      from: { id: from.id, name: from.name },
+      ...(options.to?.length ? { to: options.to } : {}),
+      ...(options.replyTo ? { replyTo: options.replyTo } : {}),
+    }),
   })
+}
+
+export function deleteMessage(id: string, from: Sender): Promise<{ ok: true }> {
+  return request<{ ok: true }>(`/api/messages/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { 'x-sender-id': from.id },
+  })
+}
+
+export function fetchInfo(): Promise<ServerInfo> {
+  return request<ServerInfo>('/api/info')
 }
 
 export function fileUrl(fileId: string, inline = false): string {
@@ -92,10 +114,15 @@ export function uploadFile(
   file: File,
   onProgress: (p: UploadProgress) => void,
   signal: AbortSignal,
+  from: Sender,
+  to?: string[],
 ): Promise<{ message: Message }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/upload')
+    xhr.setRequestHeader('x-sender-id', from.id)
+    xhr.setRequestHeader('x-sender-name', encodeURIComponent(from.name))
+    if (to?.length) xhr.setRequestHeader('x-recipients', to.join(','))
     xhr.upload.onprogress = (ev) => {
       if (ev.lengthComputable) {
         const percent = Math.min(100, Math.round((ev.loaded / ev.total) * 100))

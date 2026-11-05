@@ -12,6 +12,8 @@ export interface UploadTask {
   progress: number
   status: UploadStatus
   error?: string
+  /** Destinatários fixados ao carregar em enviar (vazio = todos). */
+  to?: string[]
 }
 
 interface UploadChipProps {
@@ -28,8 +30,8 @@ export default function UploadChip({ task, active, onRemove, onRetry }: UploadCh
     <div
       data-chip="true"
       className={cn(
-        'border-border bg-muted/50 flex w-full items-center gap-2.5 rounded-xl border p-1.5 sm:max-w-xs',
-        active && 'border-ring/50',
+        'border-border bg-muted/60 flex w-full items-center gap-2.5 rounded-2xl border p-1.5 sm:max-w-xs',
+        active && 'border-primary/60',
         status === 'error' && 'border-destructive/60',
       )}
     >
@@ -47,9 +49,10 @@ export default function UploadChip({ task, active, onRemove, onRetry }: UploadCh
             {file.name}
           </p>
           {status === 'uploading' ? (
-            <span className="text-muted-foreground shrink-0 text-[11px]">{task.progress}%</span>
+            <span className="text-muted-foreground shrink-0 text-[11px] tabular-nums">{task.progress}%</span>
           ) : null}
-          {status === 'error' ? <span className="text-destructive shrink-0 text-[11px]">Erro</span> : null}
+          {status === 'waiting' ? <span className="tag text-muted-foreground shrink-0 text-[11px]">Pronto</span> : null}
+          {status === 'error' ? <span className="tag text-destructive shrink-0 text-[11px]">Falhou</span> : null}
           {status === 'done' ? <Icon name="check" className="text-success size-3.5 shrink-0" /> : null}
         </div>
         <p className="text-muted-foreground truncate text-[11px]">
@@ -57,8 +60,15 @@ export default function UploadChip({ task, active, onRemove, onRetry }: UploadCh
           {status === 'error' && task.error ? ` · ${task.error}` : ''}
         </p>
         {status === 'uploading' ? (
-          <div className="bg-muted mt-1 h-0.5 overflow-hidden rounded-full" aria-hidden="true">
-            <div className="bg-primary h-full transition-[width] duration-200" style={{ width: `${task.progress}%` }} />
+          <div
+            className="bg-muted mt-1 h-0.5 overflow-hidden rounded-full"
+            role="progressbar"
+            aria-label={`A enviar ${file.name}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={task.progress}
+          >
+            <div className="bg-primary h-full rounded-full transition-[width] duration-200" style={{ width: `${task.progress}%` }} />
           </div>
         ) : null}
       </div>
@@ -76,7 +86,7 @@ export default function UploadChip({ task, active, onRemove, onRetry }: UploadCh
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 text-muted-foreground"
+          className="size-9 text-muted-foreground"
           onClick={() => onRemove(task.key)}
           aria-label={status === 'uploading' ? 'Cancelar envio' : `Remover ${file.name}`}
         >

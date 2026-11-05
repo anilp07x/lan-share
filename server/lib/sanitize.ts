@@ -1,4 +1,37 @@
+import type { Sender } from '../types.ts'
+
 export const FILE_NAME_MAX = 200
+export const SENDER_NAME_MAX = 40
+export const RECIPIENTS_MAX = 20
+const SENDER_ID_RE = /^[A-Za-z0-9_-]{8,64}$/
+
+/** Valida a identidade do dispositivo; devolve undefined se inválida. */
+export function sanitizeSender(rawId: unknown, rawName: unknown): Sender | undefined {
+  if (typeof rawId !== 'string' || !SENDER_ID_RE.test(rawId)) return undefined
+  if (typeof rawName !== 'string') return undefined
+  const name = rawName
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, SENDER_NAME_MAX)
+  if (name.length === 0) return undefined
+  return { id: rawId, name }
+}
+
+/**
+ * Destinatários de um envio privado: lista (ou texto separado por vírgulas) de ids.
+ * Ids inválidos invalidam tudo — um envio privado nunca deve cair para "todos".
+ * Devolve undefined se não houver destinatários, null se a lista for inválida.
+ */
+export function sanitizeRecipients(raw: unknown, nameOf: (id: string) => string | undefined): Sender[] | undefined | null {
+  if (raw === undefined || raw === null || raw === '') return undefined
+  const ids = typeof raw === 'string' ? raw.split(',') : raw
+  if (!Array.isArray(ids) || ids.length > RECIPIENTS_MAX) return null
+  const unique = [...new Set(ids)]
+  if (!unique.every((id): id is string => typeof id === 'string' && SENDER_ID_RE.test(id))) return null
+  if (unique.length === 0) return undefined
+  return unique.map((id) => ({ id, name: nameOf(id) ?? 'Dispositivo' }))
+}
 
 /**
  * Nome para exibição/metadados. Nunca usado como caminho em disco.
