@@ -16,6 +16,7 @@ import Gallery from './Gallery.tsx'
 import Composer from './Composer.tsx'
 import ConnectDialog from './ConnectDialog.tsx'
 import ImagePreview, { type PreviewState } from './ImagePreview.tsx'
+import SecureDialog from './SecureDialog.tsx'
 
 interface FeedProps {
   messages: Message[]
@@ -123,6 +124,15 @@ export default function Feed({ messages, peers, info, wsStatus, addMessage, onAu
   const [preview, setPreview] = useState<PreviewState | null>(null)
   const [replyTo, setReplyTo] = useState<Message | null>(null)
   const [deleting, setDeleting] = useState<Message[] | null>(null)
+  const [secureOpen, setSecureOpen] = useState(false)
+  // guia do HTTPS (com QR para os telemóveis): só numa página HTTP de um servidor que tem HTTPS
+  const openSecure =
+    info?.secure && window.location.protocol === 'http:'
+      ? () => {
+          setConnectOpen(false)
+          setSecureOpen(true)
+        }
+      : undefined
   // ids presentes no primeiro render com conteúdo: o histórico entra sem animação
   const seenRef = useRef<Set<string> | null>(null)
   const prevCountRef = useRef(messages.length)
@@ -303,6 +313,7 @@ export default function Feed({ messages, peers, info, wsStatus, addMessage, onAu
         onLogout={onLogout}
         onRename={onRename}
         onConnect={() => setConnectOpen(true)}
+        onSecureSetup={openSecure}
       />
 
       <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -362,7 +373,9 @@ export default function Feed({ messages, peers, info, wsStatus, addMessage, onAu
           setConnectOpen(false)
           onRename()
         }}
+        onSecureSetup={openSecure}
       />
+      {info?.secure ? <SecureDialog open={secureOpen} onOpenChange={setSecureOpen} secure={info.secure} /> : null}
       <ImagePreview preview={preview} onChange={setPreview} />
       <DeleteDialog messages={deleting} onDone={() => setDeleting(null)} onAuthFail={onAuthFail} />
     </div>

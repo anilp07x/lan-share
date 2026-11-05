@@ -5,3 +5,8 @@ data/
 *.log
 .env
 .impeccable/review/
+
+# App de ambiente gráfico (Electron)
+server-dist/
+release/
+build/

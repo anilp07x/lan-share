@@ -1,0 +1,367 @@
+/* Painel do servidor: casco esmalte da LAN Share (ver DESIGN.md). */
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('../node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+}
+
+:root {
+  color-scheme: dark;
+  --shell: #16302a;
+  --shell-raised: #1f3d36;
+  --shell-line: #ffffff1c;
+  --shell-foreground: #eef3ee;
+  --shell-muted: #a3b8af;
+  --primary: #ff8a1f;
+  --primary-foreground: #1d0e00;
+  --success: #3ccf6e;
+  --warning: #ffb14a;
+  --danger: #ff7a72;
+  --ink: #13201b;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--shell);
+  color: var(--shell-foreground);
+  font-family: 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+.tag {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 70%;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: var(--shell-muted);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.mark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  font-stretch: 72%;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+
+.status {
+  margin: 4px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--shell-muted);
+  font-size: 13px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+.dot[data-phase='running'] {
+  background: var(--success);
+}
+
+.dot[data-phase='error'] {
+  background: var(--danger);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--shell-raised);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.qr-frame {
+  align-self: center;
+  padding: 10px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.qr-frame img {
+  display: block;
+  width: 188px;
+  height: 188px;
+  image-rendering: pixelated;
+}
+
+.hint {
+  margin: 0;
+  color: var(--shell-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.hint.small {
+  font-size: 12px;
+}
+
+.hint:empty {
+  display: none;
+}
+
+.hint strong {
+  color: var(--shell-foreground);
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border: 1px solid var(--shell-line);
+  border-radius: 12px;
+  background: #0000001f;
+}
+
+.field.bare {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  user-select: text;
+}
+
+.pin {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.card > .actions {
+  margin-left: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  transition:
+    background-color 0.2s,
+    transform 0.2s var(--ease-out-expo);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.primary svg {
+  width: 18px;
+  height: 18px;
+  transform: rotate(45deg);
+}
+
+.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary) 88%, white);
+}
+
+.ghost {
+  height: 36px;
+  padding: 0 12px;
+  background: #ffffff12;
+  color: var(--shell-foreground);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--shell-line);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.chips {
+  display: flex;
+  gap: 4px;
+}
+
+.chips button {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--shell-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 70%;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.chips button[aria-pressed='true'] {
+  background: var(--shell-foreground);
+  color: var(--ink);
+}
+
+.ifaces {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  user-select: text;
+}
+
+footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--shell-line);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--shell-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--shell-foreground);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 0.25s,
+    transform 0.25s var(--ease-out-expo);
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .toast {
+    transition: none !important;
+  }
+}

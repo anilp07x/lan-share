@@ -96,47 +96,40 @@ function fillRoundedRect(c, x0, y0, x1, y1, rad, color) {
   }
 }
 
-function fillTriangle(c, cx, yTop, halfBase, yBase, color) {
-  const iyTop = Math.max(0, Math.floor(yTop))
-  const iyBase = Math.min(c.height, Math.ceil(yBase))
-  for (let y = iyTop; y < iyBase; y++) {
-    const t = (y - yTop) / (yBase - yTop)
-    const hw = halfBase * t
-    const x0 = Math.max(0, Math.floor(cx - hw))
-    const x1 = Math.min(c.width, Math.ceil(cx + hw))
-    for (let x = x0; x < x1; x++) {
-      const i = (y * c.width + x) * 4
-      c.data[i] = color[0]
-      c.data[i + 1] = color[1]
-      c.data[i + 2] = color[2]
-      c.data[i + 3] = color[3] ?? 255
-    }
-  }
-}
+const AMBER = [255, 138, 31, 255] // --primary
+const INK = [29, 14, 0, 255] // --primary-foreground
 
-const RED = [214, 69, 69, 255]
-const WHITE = [255, 255, 255, 255]
-
-// "Partilhar" = bandeja + haste + seta. f = coordenadas 0..1; scale encolhe para a safe area.
-function drawShare(c, scale = 1) {
-  const cx = c.width / 2
-  const f = (fp) => c.width * (0.5 + (fp - 0.5) * scale)
-  fillRoundedRect(c, f(0.23), f(0.23), f(0.77), f(0.77), c.width * 0.09 * scale, RED)
-  fillRoundedRect(c, f(0.32), f(0.63), f(0.68), f(0.74), c.width * 0.02 * scale, WHITE)
-  fillRect(c, cx - c.width * 0.042 * scale, f(0.36), cx + c.width * 0.042 * scale, f(0.655), WHITE)
-  fillTriangle(c, cx, f(0.21), c.width * 0.17 * scale, f(0.38), WHITE)
+/**
+ * Marca da LAN Share: cápsula (o símbolo da app) em tinta sobre âmbar.
+ * `bleed` = fundo até às margens (maskable); senão, quadrado arredondado.
+ */
+function drawCapsule(c, { bleed = false, scale = 1 } = {}) {
+  const w = c.width
+  const f = (fp) => w * (0.5 + (fp - 0.5) * scale)
+  if (bleed) fillRect(c, 0, 0, w, w, AMBER)
+  else fillRoundedRect(c, w * 0.06, w * 0.06, w * 0.94, w * 0.94, w * 0.22, AMBER)
+  // contorno: cápsula cheia em tinta e o interior de novo em âmbar
+  const stroke = w * 0.055 * scale
+  const [x0, y0, x1, y1] = [f(0.2), f(0.34), f(0.8), f(0.66)]
+  const r = (y1 - y0) / 2
+  fillRoundedRect(c, x0, y0, x1, y1, r, INK)
+  fillRoundedRect(c, x0 + stroke, y0 + stroke, x1 - stroke, y1 - stroke, r - stroke, AMBER)
+  // as duas divisões da cápsula
+  for (const fx of [0.425, 0.575]) fillRect(c, f(fx) - stroke / 2, y0, f(fx) + stroke / 2, y1, INK)
 }
 
 const sizes = [
-  { size: 512, file: 'icon-512.png', scale: 1 },
-  { size: 192, file: 'icon-192.png', scale: 1 },
-  { size: 512, file: 'maskable-512.png', scale: 0.84 },
-  { size: 180, file: 'apple-touch-icon.png', scale: 1 },
+  { size: 512, file: 'icon-512.png' },
+  { size: 192, file: 'icon-192.png' },
+  // maskable: o sistema recorta; o símbolo fica dentro da zona segura (80 %)
+  { size: 512, file: 'maskable-512.png', bleed: true, scale: 0.8 },
+  // iOS arredonda sozinho e não aceita transparência
+  { size: 180, file: 'apple-touch-icon.png', bleed: true },
 ]
 
-for (const { size, file, scale } of sizes) {
+for (const { size, file, bleed, scale } of sizes) {
   const c = makeCanvas(size)
-  drawShare(c, scale)
+  drawCapsule(c, { bleed, scale })
   writeFileSync(join(publicDir, file), encodePng(c.width, c.height, c.data))
   console.log('icon:', file)
 }

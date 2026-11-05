@@ -13,6 +13,8 @@ interface StatusBarProps {
   onLogout: () => void
   onRename: () => void
   onConnect: () => void
+  /** Página em HTTP com HTTPS disponível: o sino leva ao guia. */
+  onSecureSetup?: () => void
 }
 
 function statusLabel(wsStatus: WsStatus): string {
@@ -47,7 +49,7 @@ function Brand({ size = 'md' }: { size?: 'md' | 'lg' }) {
   )
 }
 
-function AlertsToggle({ className }: { className: string }) {
+function AlertsToggle({ className, onSecureSetup }: { className: string; onSecureSetup?: () => void }) {
   const on = useAlertsEnabled()
   const label = systemAlertsSupported ? 'Som e avisos de chegada' : 'Som de chegada'
   return (
@@ -56,6 +58,8 @@ function AlertsToggle({ className }: { className: string }) {
       onClick={() => {
         void setAlertsEnabled(!on).then(() => {
           toast.info(on ? 'Avisos desligados' : `${label} ligados`)
+          // sem HTTPS só há som; o guia mostra como ter avisos do sistema
+          if (!on && !systemAlertsSupported) onSecureSetup?.()
         })
       }}
       className={className}
@@ -69,7 +73,7 @@ function AlertsToggle({ className }: { className: string }) {
 }
 
 /** Casco esmalte: cabeçalho no telemóvel, rail no desktop. */
-export default function StatusBar({ wsStatus, peers, onLogout, onRename, onConnect }: StatusBarProps) {
+export default function StatusBar({ wsStatus, peers, onLogout, onRename, onConnect, onSecureSetup }: StatusBarProps) {
   const device = useDevice()
   const label = statusLabel(wsStatus)
   const shellButton =
@@ -91,7 +95,7 @@ export default function StatusBar({ wsStatus, peers, onLogout, onRename, onConne
           <span className="tag text-sm tabular-nums">{peers.length}</span>
           <Icon name="qr" className="size-4" />
         </button>
-        <AlertsToggle className={cn(shellButton, 'size-11')} />
+        <AlertsToggle className={cn(shellButton, 'size-11')} onSecureSetup={onSecureSetup} />
         <button type="button" onClick={onLogout} className={cn(shellButton, 'size-11')} aria-label="Sair">
           <Icon name="logout" className="size-[18px]" />
         </button>
@@ -140,7 +144,7 @@ export default function StatusBar({ wsStatus, peers, onLogout, onRename, onConne
             </span>
             <Icon name="pencil" className="text-shell-muted size-3.5 shrink-0" />
           </button>
-          <AlertsToggle className={cn(shellButton, 'size-11')} />
+          <AlertsToggle className={cn(shellButton, 'size-11')} onSecureSetup={onSecureSetup} />
           <button type="button" onClick={onLogout} className={cn(shellButton, 'size-11')} aria-label="Sair" title="Sair">
             <Icon name="logout" className="size-[18px]" />
           </button>

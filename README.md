@@ -28,15 +28,61 @@ http://192.168.x.x:3000                  ← um URL por interface + QR
 
 Nos telemóveis (mesma rede Wi‑Fi): abrir o URL, escrever o PIN, começar. Para instalar: opção **Adicionar ao ecrã principal** no Android/*Adicionar à App* no iOS.
 
+## App (painel + ícone na bandeja)
+
+Para quem não programa: `LAN Share` também corre como app de ambiente gráfico. Abre a **própria LAN Share numa janela** (já com sessão iniciada) e fica na bandeja do sistema. Com a janela fechada ou minimizada, cada envio novo aparece como **aviso nativo do Windows**. O painel do servidor (código QR, endereço, PIN, certificado) abre-se pela bandeja em *Servidor (PIN e QR)*.
+
+```bash
+npm install
+npm run build      # cliente
+npm run build:server
+npm run app        # arranca a app em modo de desenvolvimento
+```
+
+Para gerar os instaladores (em `release/`):
+
+```bash
+npm run app:dist   # LAN-Share-<versão>-instalador.exe + ...-portable.exe
+```
+
+O instalador cria atalhos no Menu Iniciar e no ambiente de trabalho e tem desinstalador; a versão *portable* não instala nada. Não é preciso ter Node instalado na máquina de quem instala.
+
+| Onde fica | Caminho |
+| --- | --- |
+| Ficheiros recebidos | `%APPDATA%\LAN Share\data\Ficheiros` (Windows) |
+| Índice de mensagens | `%APPDATA%\LAN Share\data\index.json` |
+| Definições da app | Electron gere-as em `%APPDATA%\LAN Share` |
+
+Detalhes que interessam:
+
+- A app escolhe uma porta livre a partir de `3000` (se estiver ocupada, tenta `3001`, `3002`…).
+- Fechar a janela **não** para o servidor nem os avisos; fecha-se pelo *Sair* do painel ou da bandeja.
+- **Iniciar com o Windows** arranca a app escondida, apenas na bandeja (os avisos continuam a chegar).
+- O PIN é gerado a cada arranque e aparece no painel e em *Ligar outro dispositivo* dentro da app.
+- O servidor corre dentro do executável da app (Node embebido), por isso não depende de uma instalação de Node.
+
 Para desenvolvimento:
 
 ```bash
 npm run dev:client  # Vite em :5173 (proxy para o servidor em :3000)
 npm run dev         # servidor com --watch (node 24 executa .ts direto)
-npm test            # 19 testes de integração
+npm test            # testes de integração
 npm run typecheck   # TS rigoroso (servidor + cliente)
 npm run icons       # regenera os ícones PWA
+npm run icons:app   # regenera build/icon.ico e build/tray.ico
 ```
+
+O servidor, quando arranca com `LANSHARE_IPC=1` (é o que a app faz), escreve na stdout uma linha `LANSHARE_IPC {json}` com o endereço, o PIN e as interfaces — é assim que o painel sabe o que mostrar.
+
+## HTTPS e avisos nos telemóveis
+
+Os browsers só mostram avisos do sistema em ligações seguras. Por isso o servidor também serve **HTTPS na porta `3443`** com um certificado próprio, sem internet:
+
+- Na primeira execução cria uma autoridade local (`data/tls/ca.key` + `ca.crt`, 10 anos) que assina o certificado do servidor (397 dias, renovado sozinho quando o IP muda ou a validade acaba). A chave da autoridade nunca sai do computador — não a partilhes.
+- Anuncia **`lanshare.local`** por mDNS (iPhone, Mac e Windows resolvem; alguns Android precisam do IP).
+- Cada dispositivo instala o certificado **uma vez**: na app, *Ligar outro dispositivo › Avisos no telemóvel* mostra os dois QR (certificado em `http://<ip>:3000/ca.crt` e endereço seguro) e os passos para iPhone, Android e PC. Na app de Windows há o botão *Instalar certificado neste PC*.
+- O HTTP na porta `3000` continua a funcionar para quem não instalar nada.
+- Com o browser fechado ou o ecrã bloqueado não há avisos: isso exigiria os servidores de notificações da Apple/Google (internet).
 
 ## Configuração (variáveis de ambiente)
 
@@ -52,10 +98,13 @@ npm run icons       # regenera os ícones PWA
 | `MIN_FREE_DISK_MB` | `512` | Recusa uploads se o disco ficar abaixo disto |
 | `SWEEP_INTERVAL_MIN` | `5` | Frequência da limpeza de expirados (≥1) |
 | `UPLOAD_DIR` | `./data/files` | Onde ficam os ficheiros |
+| `TLS` | `1` | `0` desliga o HTTPS (fica só HTTP) |
+| `HTTPS_PORT` | `PORT + 443` | Porta HTTPS |
+| `MDNS_NAME` | `lanshare` | Nome anunciado na rede (`<nome>.local`) |
 
 ## Segurança
 
-- **LAN‑only por conceção**: o servidor escuta em `0.0.0.0` para ser alcançável na LAN, mas **não** está preparado para internet — sem TLS, sem auth HTTPS. Nunca faças port‑forwarding nem hospedes numa cloud.
+- **LAN‑only por conceção**: o servidor escuta em `0.0.0.0` para ser alcançável na LAN, mas **não** está preparado para internet. O HTTPS usa um certificado próprio pensado para a rede local. Nunca faças port‑forwarding nem hospedes numa cloud.
 - Sessão por cookie `HttpOnly`/`SameSite=strict` (12 h); sem cookie → `401`.
 - Rate‑limit global + bloqueio temporário do PIN após tentativas falhadas.
 - CSP via Helmet; sanitização de nomes de ficheiro (aplicação de `path.basename`); sem execução de conteúdo enviado.

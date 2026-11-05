@@ -1,7 +1,7 @@
 /* LAN Share — service worker.
    Estratégia: navegações network-first (cai no cache se sem rede);
    assets simples stale-while-revalidate. Nunca interfere com /api nem /ws. */
-const CACHE = 'lan-share-v2'
+const CACHE = 'lan-share-v3'
 const CORE = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png']
 
 self.addEventListener('install', (event) => {
@@ -45,6 +45,17 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => cached)
       return cached || network
+    }),
+  )
+})
+
+// Toque num aviso: volta à app (o separador aberto, ou um novo).
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin)
+      return open ? open.focus() : self.clients.openWindow('/')
     }),
   )
 })

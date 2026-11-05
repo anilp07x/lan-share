@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LAN Share — cena 4</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        #s4 .copy {
+          position: absolute;
+          left: 120px;
+          top: 250px;
+          width: 880px;
+        }
+        #s4 .copy h2 {
+          font-size: 76px;
+        }
+        #s4 .copy .sub {
+          margin-top: 32px;
+          font-size: 29px;
+          color: var(--muted);
+        }
+        #s4 .panel {
+          position: absolute;
+          left: 1090px;
+          top: 190px;
+          width: 720px;
+          height: 700px;
+          padding: 46px 50px;
+          background: rgba(28, 28, 30, 0.6);
+          border: 1px solid var(--border-2);
+          border-radius: 40px;
+          backdrop-filter: blur(20px) saturate(160%);
+          -webkit-backdrop-filter: blur(20px) saturate(160%);
+          box-shadow: 0 60px 160px rgba(0, 0, 0, 0.6);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        #s4 .droptic {
+          width: 92px;
+          height: 92px;
+          border-radius: 50%;
+          background: rgba(41, 151, 255, 0.14);
+          border: 1px solid rgba(41, 151, 255, 0.4);
+          display: grid;
+          place-items: center;
+          color: var(--primary);
+        }
+        #s4 .droptic .icon {
+          width: 44px;
+          height: 44px;
+        }
+        #s4 .dtitle {
+          margin-top: 26px;
+          font-size: 46px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
+        }
+        #s4 .dsub {
+          margin-top: 10px;
+          font-size: 26px;
+          color: var(--muted);
+        }
+        #s4 .chip {
+          position: relative;
+          margin-top: 40px;
+          width: 620px;
+          padding: 24px 26px;
+          background: var(--card);
+          border: 1px solid var(--border-2);
+          border-radius: 24px;
+        }
+        #s4 .chip .glow {
+          position: absolute;
+          inset: -18px;
+          border-radius: 40px;
+          background: radial-gradient(
+            ellipse at 50% 50%,
+            rgba(48, 209, 88, 0.34),
+            rgba(48, 209, 88, 0) 70%
+          );
+          opacity: calc(var(--bass) * 0.5);
+          pointer-events: none;
+        }
+        #s4 .row {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 18px;
+        }
+        #s4 .row .icon {
+          width: 34px;
+          height: 34px;
+          color: var(--primary);
+        }
+        #s4 .row b {
+          font-size: 28px;
+          font-weight: 600;
+          flex: 1;
+        }
+        #s4 .row .size {
+          font-size: 25px;
+          color: var(--muted);
+          font-family: var(--mono);
+        }
+        #s4 .track {
+          position: relative;
+          margin-top: 22px;
+          height: 12px;
+          border-radius: 999px;
+          background: #ffffff1a;
+          overflow: hidden;
+        }
+        #s4 .fill {
+          position: absolute;
+          inset: 0;
+          border-radius: 999px;
+          background: var(--primary);
+          transform-origin: 0% 50%;
+        }
+        #s4 .metarow {
+          position: relative;
+          margin-top: 16px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 23px;
+          color: var(--muted);
+        }
+        #s4 .metarow .stack {
+          position: relative;
+          height: 32px;
+          width: 100%;
+        }
+        #s4 .metarow .stack span {
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+        #s4 .pct {
+          font-family: var(--mono);
+          color: var(--fg);
+        }
+        #s4 .toast {
+          margin-top: 34px;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 18px 24px;
+          border-radius: 18px;
+          background: rgba(48, 209, 88, 0.14);
+          border: 1px solid rgba(48, 209, 88, 0.42);
+          font-size: 26px;
+          color: #d6f5dd;
+        }
+        #s4 .toast .icon {
+          width: 30px;
+          height: 30px;
+          color: var(--success);
+        }
+      </style>
+
+      <div id="root" data-composition-id="s4" data-width="1920" data-height="1080">
+        <section id="s4" class="scene">
+          <div id="s4-copy" class="copy">
+            <h2>
+              Até 2 GB por ficheiro —<br /><span class="grad">do telemóvel para o disco do PC.</span>
+            </h2>
+            <div class="sub">A fila envia um de cada vez.</div>
+          </div>
+
+          <div id="s4-panel" class="panel">
+            <div id="s4-drop" class="droptic">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" x2="12" y1="15" y2="3" />
+              </svg>
+            </div>
+            <div id="s4-dtitle" class="dtitle">Larga aqui os ficheiros</div>
+            <div id="s4-dsub" class="dsub">Vão entrar na fila de envio.</div>
+
+            <div id="s4-chip" class="chip">
+              <div class="glow"></div>
+              <div class="row">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                </svg>
+                <b>Relatório final (v2).pdf</b>
+                <span class="size">1.2 GB</span>
+              </div>
+              <div class="track"><div id="s4-fill" class="fill"></div></div>
+              <div class="metarow">
+                <span class="stack">
+                  <span id="s4-meta-a" data-layout-allow-overlap>A enviar…</span>
+                  <span id="s4-meta-b" style="opacity: 0; visibility: hidden">Enviado · no disco do PC</span>
+                </span>
+                <span id="s4-pct" class="pct">0 %</span>
+              </div>
+            </div>
+
+            <div id="s4-toast" class="toast" style="opacity: 0; visibility: hidden">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              Guardado no PC
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <script>
+        /* Cena 4 · 12.5–18.0 s. Tempos locais = globais − 12.5.
+           Cues: strong 14.22 (entra na fila), 16.86 (barra a 100 %).
+           A chegada do ficheiro cai em 17.05 — 0.19 s depois da barra
+           fechar, na batida natural, para ter leitura antes do corte. */
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          var pct = { n: 0 };
+          var elPct = document.getElementById('s4-pct');
+
+          tl.from('#s4-copy', { autoAlpha: 0, x: -40, duration: 0.5, ease: 'power3.out' }, 0.22);
+          tl.from('#s4-panel', { autoAlpha: 0, y: 50, scale: 0.98, duration: 0.55, ease: 'power3.out' }, 0.36);
+          tl.from('#s4-drop', { autoAlpha: 0, scale: 0.7, duration: 0.42, ease: 'back.out(2)' }, 0.46);
+          tl.from('#s4-dtitle', { autoAlpha: 0, y: 18, duration: 0.38, ease: 'power3.out' }, 0.52);
+          tl.from('#s4-dsub', { autoAlpha: 0, y: 14, duration: 0.36, ease: 'power2.out' }, 0.58);
+
+          /* Strong cue 14.22 → o ficheiro entra na fila */
+          tl.from('#s4-chip', { autoAlpha: 0, y: 44, scale: 0.95, duration: 0.5, ease: 'power3.out' }, 1.72);
+          tl.fromTo('#s4-fill', { scaleX: 0 }, { scaleX: 1, duration: 2.1, ease: 'power1.inOut' }, 2.26);
+          tl.to(
+            pct,
+            {
+              n: 100,
+              duration: 2.1,
+              ease: 'power1.inOut',
+              onUpdate: function () {
+                elPct.textContent = Math.round(pct.n) + ' %';
+              },
+            },
+            2.26,
+          );
+
+          /* Strong cue 16.86 → barra fechada */
+          tl.to('#s4-fill', { backgroundColor: '#30d158', duration: 0.24 }, 4.36);
+          tl.to('#s4-chip', { borderColor: 'rgba(48,209,88,0.5)', duration: 0.19 }, 4.36);
+          tl.to('#s4-meta-a', { autoAlpha: 0, duration: 0.16 }, 4.4);
+          tl.fromTo('#s4-meta-b', { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 4.4);
+
+          /* 17.05 → o ficheiro assenta no feed */
+          tl.fromTo('#s4-chip', { scale: 1.04 }, { scale: 1, duration: 0.28, ease: 'elastic.out(1, 0.5)' }, 4.55);
+          tl.fromTo('#s4-toast', { autoAlpha: 0, y: 22 }, { autoAlpha: 1, y: 0, duration: 0.42, ease: 'power3.out' }, 4.58);
+          tl.to('#s4-chip', { scale: 1.035, duration: 0.06, ease: 'power1.out' }, 4.86);
+          tl.to('#s4-chip', { scale: 1, duration: 0.06, ease: 'power1.inOut' }, 4.94);
+          tl.to('#s4-chip', { scale: 1.025, duration: 0.06, ease: 'power1.out' }, 5.02);
+          tl.to('#s4-chip', { scale: 1, duration: 0.08, ease: 'power1.inOut' }, 5.1);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines['s4'] = tl;
+          tl.to('#s4', { autoAlpha: 0, duration: 0.01 }, 5.38);
+          tl.seek(0);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

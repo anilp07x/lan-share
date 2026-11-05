@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LAN Share — cena 1</title>
+  </head>
+  <body>
+    <template>
+      <style>
+        #s1 {
+          font-family: var(--sans);
+        }
+        #s1 .glow {
+          position: absolute;
+          left: 50%;
+          top: 300px;
+          width: 1500px;
+          height: 900px;
+          margin-left: -750px;
+          background: radial-gradient(
+            ellipse at 50% 40%,
+            rgba(41, 151, 255, 0.16),
+            rgba(41, 151, 255, 0) 62%
+          );
+        }
+        #s1 .term {
+          position: absolute;
+          left: 120px;
+          top: 140px;
+          width: 1180px;
+          height: 700px;
+          background: #0b0b0d;
+          border: 1px solid var(--border-2);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 60px 140px rgba(0, 0, 0, 0.7);
+        }
+        #s1 .bar {
+          height: 56px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 0 22px;
+          background: #161618;
+          border-bottom: 1px solid var(--border);
+        }
+        #s1 .dot {
+          width: 13px;
+          height: 13px;
+          border-radius: 50%;
+        }
+        #s1 .r {
+          background: #ff5f57;
+        }
+        #s1 .y {
+          background: #febc2e;
+        }
+        #s1 .g {
+          background: #28c840;
+        }
+        #s1 .ttl {
+          margin-left: 12px;
+          font-size: 21px;
+          color: var(--muted);
+        }
+        #s1 .pad {
+          padding: 34px 40px;
+          width: 700px;
+        }
+        #s1 .cmd {
+          font-family: var(--mono);
+          font-size: 30px;
+          line-height: 1.5;
+          color: var(--fg);
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          height: 46px;
+        }
+        #s1 .prompt {
+          color: var(--success);
+        }
+        #s1 .caret {
+          width: 12px;
+          height: 32px;
+          background: var(--primary);
+        }
+        #s1 .out {
+          margin-top: 18px;
+          font-family: var(--mono);
+          font-size: 25px;
+          line-height: 1.72;
+          color: #c7c7cc;
+        }
+        #s1 .out .em {
+          color: var(--primary);
+        }
+        #s1 .out .ok {
+          color: var(--success);
+        }
+        #s1 .out .dim {
+          color: #6f6f78;
+        }
+        #s1 .qrbox {
+          position: absolute;
+          left: 828px;
+          top: 96px;
+          width: 300px;
+          padding: 22px 22px 18px;
+          background: #141416;
+          border: 1px solid var(--border-2);
+          border-radius: 18px;
+        }
+        #s1 .qrclip {
+          width: 256px;
+          height: 256px;
+          overflow: hidden;
+          position: relative;
+          background: #ffffff;
+          border-radius: 8px;
+        }
+        #s1 .qrgrid {
+          width: 256px;
+          height: 256px;
+          transform-origin: 50% 0%;
+        }
+        #s1 .qrgrid rect {
+          fill: #000000;
+        }
+        #s1 .scan {
+          position: absolute;
+          left: 0;
+          width: 256px;
+          height: 4px;
+          background: var(--primary);
+          opacity: 0.9;
+        }
+        #s1 .qrb {
+          margin-top: 14px;
+          font-size: 19px;
+          color: var(--muted);
+          text-align: center;
+        }
+        #s1 .hook {
+          position: absolute;
+          left: 120px;
+          top: 906px;
+          width: 1500px;
+        }
+      </style>
+
+      <div id="root" data-composition-id="s1" data-width="1920" data-height="1080">
+        <section id="s1" class="scene">
+          <div id="s1-glow" class="glow"></div>
+
+          <div id="s1-term" class="term">
+            <div class="bar">
+              <span class="dot r"></span>
+              <span class="dot y"></span>
+              <span class="dot g"></span>
+              <span class="ttl">PowerShell — lan-share</span>
+            </div>
+
+            <div class="pad">
+              <div class="cmd">
+                <span class="prompt">$</span>
+                <span id="s1-typed"></span>
+                <span id="s1-caret" class="caret"></span>
+              </div>
+              <div class="out">
+                <div id="s1-l1" style="color: #f5f5f7">── LAN Share ──</div>
+                <div id="s1-l2">PIN de acesso: <span class="ok">482160</span></div>
+                <div id="s1-l3">── Abre a LAN Share noutro telemóvel em: ──</div>
+                <div id="s1-l4" class="em">http://192.168.1.42:3000</div>
+                <div id="s1-l5" class="dim">Espaço livre: 128.4 GB · expiram em 24 h</div>
+                <div id="s1-l6" class="dim">LAN-only: nunca exponhas esta porta na Internet.</div>
+              </div>
+            </div>
+
+            <div id="s1-qrbox" class="qrbox">
+              <div class="qrclip" data-layout-allow-overflow>
+                <svg id="s1-qrgrid" class="qrgrid" viewBox="0 0 25 25" shape-rendering="crispEdges"></svg>
+                <div id="s1-scan" class="scan"></div>
+              </div>
+              <div id="s1-qrb" class="qrb">Aponta a câmara</div>
+            </div>
+          </div>
+
+          <h1 id="s1-hook" class="hook">
+            Um comando. Um QR.<br /><span class="grad">É só isso.</span>
+          </h1>
+        </section>
+      </div>
+
+      <script>
+        /* Cena 1 · 0–4.0 s (tempos locais da cena).
+           Cues: strong 1.60 (Enter → output), 3.70 (hook line, LOCK). */
+        (function () {
+          var ROWS = (
+            '1111111100001001111111111|1000001000111001101000001|1011101000101011001011101|' +
+            '1011101001100101001011101|1011101001111111001011101|1000001000110000101000001|' +
+            '1111111111111111111111111|1000001001011100001000001|1100011001000010101001011|' +
+            '0010111010001010001010001|0101101111110010011111100|1110001110011111111101100|' +
+            '1110101100100111101000110|1100101011001011101100001|1000101101100100101001001|' +
+            '1101001100100011001010110|1000011000000000101010100|1000001001101011001000110|' +
+            '1111111111111111100110101|1000001001011011110011000|1011101011111101110011000|' +
+            '1011101011000001110110000|1011101010100111010101110|1000001010100000100110010|' +
+            '1111111110000111010010100')
+            .split('|');
+          var NS = 'http://www.w3.org/2000/svg';
+          var svg = document.getElementById('s1-qrgrid');
+          var frag = document.createDocumentFragment();
+          ROWS.forEach(function (row, y) {
+            for (var x = 0; x < row.length; x++) {
+              if (row[x] === '1') {
+                var r = document.createElementNS(NS, 'rect');
+                r.setAttribute('x', x);
+                r.setAttribute('y', y);
+                r.setAttribute('width', '1');
+                r.setAttribute('height', '1');
+                frag.appendChild(r);
+              }
+            }
+          });
+          svg.appendChild(frag);
+
+          var tl = gsap.timeline({ paused: true });
+          var cmd = 'npm start';
+          var type = { i: 0 };
+          var typed = document.getElementById('s1-typed');
+
+          tl.from('#s1-glow', { autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 0);
+          tl.from('#s1-term', { autoAlpha: 0, y: 40, scale: 0.985, duration: 0.55, ease: 'power3.out' }, 0.06);
+
+          /* `$ npm start` — typing per character */
+          tl.to(type, {
+            i: cmd.length,
+            duration: 0.83,
+            ease: 'steps(' + cmd.length + ')',
+            onUpdate: function () {
+              typed.textContent = cmd.slice(0, type.i);
+            },
+          }, 0.3);
+          tl.to('#s1-caret', { autoAlpha: 0, duration: 0.18 }, 1.28);
+
+          /* Server output, line by line */
+          var lines = ['#s1-l1', '#s1-l2', '#s1-l3', '#s1-l4', '#s1-l5', '#s1-l6'];
+          var at = [1.62, 1.78, 1.94, 2.14, 2.42, 2.66];
+          lines.forEach(function (sel, i) {
+            tl.fromTo(
+              sel,
+              { autoAlpha: 0, x: -14 },
+              { autoAlpha: 1, x: 0, duration: 0.26, ease: 'power2.out' },
+              at[i],
+            );
+          });
+
+          /* QR draws top → bottom (transform only) with a scan line */
+          tl.from('#s1-qrbox', { autoAlpha: 0, scale: 0.94, duration: 0.34, ease: 'power3.out' }, 2.45);
+          tl.fromTo(
+            '#s1-qrgrid',
+            { scaleY: 0.02 },
+            { scaleY: 1, duration: 1.05, ease: 'power1.inOut' },
+            2.45,
+          );
+          tl.fromTo(
+            '#s1-scan',
+            { y: 0, autoAlpha: 1 },
+            { y: 248, autoAlpha: 1, duration: 1.05, ease: 'power1.inOut' },
+            2.45,
+          );
+          tl.to('#s1-scan', { autoAlpha: 0, duration: 0.16 }, 3.5);
+          tl.from('#s1-qrb', { autoAlpha: 0, y: 8, duration: 0.3, ease: 'power2.out' }, 3.56);
+
+          /* Hook — strong cue lock 3.70 */
+          tl.from('#s1-hook', { autoAlpha: 0, y: 34, duration: 0.3, ease: 'power3.out' }, 3.7);
+
+          /* A cena esconde-se no fim da sua janela: cada sub-composição é
+             uma camada opaca e só a ativa pode pintar. */
+          tl.to('#s1', { autoAlpha: 0, duration: 0.01 }, 3.97);
+
+          window.__timelines = window.__timelines || {};
+          window.__timelines['s1'] = tl;
+          tl.seek(0);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

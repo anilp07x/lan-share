@@ -14,13 +14,13 @@ function rank(addr: string): number {
 }
 
 /** URLs por interface (IPv4, não-internos), sem duplicados. */
-export function lanUrls(port: number): LanUrl[] {
+export function lanUrls(port: number, protocol: 'http' | 'https' = 'http'): LanUrl[] {
   const out: LanUrl[] = []
   const seen = new Set<string>()
   for (const [iface, addrs] of Object.entries(os.networkInterfaces())) {
     for (const a of addrs ?? []) {
       if (a.family !== 'IPv4' || a.internal) continue
-      const url = `http://${a.address}:${port}`
+      const url = `${protocol}://${a.address}:${port}`
       if (seen.has(url)) continue
       seen.add(url)
       out.push({ iface, url })
@@ -33,8 +33,8 @@ export function lanUrls(port: number): LanUrl[] {
 export function preferPrimary(urls: LanUrl[]): LanUrl | null {
   if (urls.length === 0) return null
   return [...urls].sort((a, b) => {
-    const rankA = rank(a.url.replace(/^http:\/\//, '').split(':')[0] ?? '')
-    const rankB = rank(b.url.replace(/^http:\/\//, '').split(':')[0] ?? '')
+    const rankA = rank(a.url.replace(/^https?:\/\//, '').split(':')[0] ?? '')
+    const rankB = rank(b.url.replace(/^https?:\/\//, '').split(':')[0] ?? '')
     return rankA - rankB
   })[0] ?? null
 }

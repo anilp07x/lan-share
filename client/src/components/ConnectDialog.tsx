@@ -15,29 +15,41 @@ interface ConnectDialogProps {
   info: ServerInfo | null
   peers: Sender[]
   onRename: () => void
+  /** Abre o guia do HTTPS (só quando o servidor o tem e esta página ainda é HTTP). */
+  onSecureSetup?: () => void
 }
 
 const LOOPBACK = /^(localhost|127\.|\[::1\])/
 
+/** Na app LAN Share para Windows o PIN vem do próprio servidor. */
+const desktop = (window as { lanShareDesktop?: { getPin: () => Promise<string | null> } }).lanShareDesktop
+
 /** Endereços que outro dispositivo consegue abrir (o loopback do PC não serve). */
 function joinUrls(info: ServerInfo | null): string[] {
   const here = window.location.origin
-  const lan = info?.urls ?? []
+  // numa página segura, o QR também leva à versão segura
+  const secure = window.location.protocol === 'https:' ? info?.secure : null
+  const lan = (secure ? [...secure.urls, secure.mdnsUrl] : info?.urls) ?? []
   if (!LOOPBACK.test(window.location.hostname)) return [here, ...lan.filter((u) => u !== here)]
   if (lan.length === 0) return [here]
-  const primary = info?.primaryUrl ?? lan[0]!
+  const primary = (secure ? secure.primaryUrl : info?.primaryUrl) ?? lan[0]!
   return [primary, ...lan.filter((u) => u !== primary)]
 }
 
-export default function ConnectDialog({ open, onOpenChange, info, peers, onRename }: ConnectDialogProps) {
+export default function ConnectDialog({ open, onOpenChange, info, peers, onRename, onSecureSetup }: ConnectDialogProps) {
   const urls = joinUrls(info)
   const [selected, setSelected] = useState(urls[0] ?? '')
   const { copied, copy } = useCopied()
   const device = useDevice()
+  const [pin, setPin] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) setSelected(joinUrls(info)[0] ?? '')
   }, [open, info])
+
+  useEffect(() => {
+    if (open && desktop) void desktop.getPin().then(setPin).catch(() => {})
+  }, [open])
 
   const isLoopbackOnly = LOOPBACK.test(new URL(selected || window.location.origin).hostname)
 
@@ -56,10 +68,17 @@ export default function ConnectDialog({ open, onOpenChange, info, peers, onRenam
             <DialogHeader>
               <DialogTitle>Ligar outro dispositivo</DialogTitle>
               <DialogDescription>
-                Tem de estar na mesma rede Wi‑Fi. Depois de abrir o endereço, introduz o PIN que aparece no terminal
-                do computador.
+                Tem de estar na mesma rede Wi‑Fi. Depois de abrir o endereço, introduz o PIN
+                {pin ? ' abaixo.' : ' que aparece no terminal do computador.'}
               </DialogDescription>
             </DialogHeader>
+
+            {pin ? (
+              <div className="flex flex-col gap-2">
+                <span className="tag text-muted-foreground text-xs">PIN de acesso</span>
+                <span className="display text-[34px] tracking-[0.14em] tabular-nums">{pin}</span>
+              </div>
+            ) : null}
 
             <div className="flex flex-col gap-2">
               <span className="tag text-muted-foreground text-xs">Endereço</span>
@@ -96,6 +115,21 @@ export default function ConnectDialog({ open, onOpenChange, info, peers, onRenam
                 </p>
               ) : null}
             </div>
+
+            {onSecureSetup ? (
+              <button
+                type="button"
+                onClick={onSecureSetup}
+                className="bg-signal-wash hover:bg-signal-wash/70 flex items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-colors"
+              >
+                <Icon name="bell" className="text-signal-ink size-5 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">Avisos no telemóvel</span>
+                  <span className="text-muted-foreground block text-sm">Ligação segura com o certificado deste PC</span>
+                </span>
+                <Icon name="chevron-right" className="text-muted-foreground size-4 shrink-0" />
+              </button>
+            ) : null}
 
             <div className="flex flex-col gap-2">
               <span className="tag text-muted-foreground text-xs">Estações ligadas · {peers.length}</span>

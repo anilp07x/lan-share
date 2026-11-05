@@ -26,13 +26,15 @@ export default function App() {
   const [peers, setPeers] = useState<Sender[]>([])
   const [info, setInfo] = useState<ServerInfo | null>(null)
   const [naming, setNaming] = useState(false)
+  const [historyReady, setHistoryReady] = useState(false)
   const device = useDevice()
   const wsRef = useRef<WsClient | null>(null)
-  useArrivalAlerts(messages, device.id)
+  useArrivalAlerts(messages, device.id, historyReady)
 
   const handleFrame = useCallback((frame: WsFrame) => {
     if (frame.t === 'history') {
       setMessages(frame.messages)
+      setHistoryReady(true)
       return
     }
     if (frame.t === 'message') {
@@ -58,6 +60,7 @@ export default function App() {
 
   const onAuthFail = useCallback(() => {
     wsRef.current?.stop()
+    setHistoryReady(false)
     setAuth('unauthed')
     setMessages([])
     setPeers([])

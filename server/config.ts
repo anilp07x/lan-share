@@ -15,6 +15,11 @@ export interface Config {
   sessionTtlMs: number
   previewMaxBytes: number
   sweepIntervalMs: number
+  /** Porta HTTPS (certificado próprio); null = só HTTP. */
+  httpsPort: number | null
+  /** Nome anunciado por mDNS, já com ".local". */
+  mdnsHost: string
+  tlsDir: string
 }
 
 type IntOptions = { min?: number; max?: number }
@@ -66,6 +71,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const indexFile = path.join(path.dirname(uploadDir), 'index.json')
   const tmpDir = path.join(uploadDir, 'tmp')
 
+  const tlsOn = env.TLS?.trim() !== '0'
+  const httpsPort = tlsOn ? intEnv(env, 'HTTPS_PORT', port + 443, { min: 1, max: 65535 }) : null
+  if (httpsPort === port) throw new Error('HTTPS_PORT tem de ser diferente de PORT')
+  const mdnsName = (env.MDNS_NAME?.trim() || 'lanshare').toLowerCase()
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(mdnsName)) {
+    throw new Error('MDNS_NAME só pode ter letras, números e hífenes (ex.: lanshare)')
+  }
+
   return {
     port,
     host,
@@ -81,5 +94,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     sessionTtlMs: 12 * 3600 * 1000,
     previewMaxBytes: 20 * 1024 * 1024,
     sweepIntervalMs: sweepIntervalMin * 60_000,
+    httpsPort,
+    mdnsHost: `${mdnsName}.local`,
+    tlsDir: path.join(path.dirname(uploadDir), 'tls'),
   }
 }

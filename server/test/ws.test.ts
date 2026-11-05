@@ -28,6 +28,9 @@ async function makeConfig(): Promise<{ config: Config; dir: string }> {
     sessionTtlMs: 60_000,
     previewMaxBytes: 1024 * 1024,
     sweepIntervalMs: 60_000,
+    httpsPort: null,
+    mdnsHost: 'lanshare.local',
+    tlsDir: path.join(dir, 'tls'),
   }
   return { config, dir }
 }

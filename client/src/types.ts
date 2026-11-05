@@ -44,6 +44,13 @@ export interface ServerInfo {
   urls: string[]
   retentionMs: number
   maxFileMb: number
+  /** HTTPS com certificado próprio; null se o servidor só tiver HTTP. */
+  secure: {
+    primaryUrl: string | null
+    urls: string[]
+    mdnsUrl: string
+    caUrl: string
+  } | null
 }
 
 export type WsFrame =
